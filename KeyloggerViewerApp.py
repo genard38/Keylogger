@@ -1,11 +1,10 @@
 from datetime import datetime
 
 from tkcalendar import Calendar
-
-from FileTreeWidget import FileTreeWidget
+from UI_Components.FileTreeWidget import FileTreeWidget
 from KeyloggerEngine import KeyloggerEngine
 from LogFileManager import LogFileManager
-from LogViewerWidget import LogViewerWidget
+from UI_Components.LogViewerWidget import LogViewerWidget
 from PlatformUtils import PlatformUtils
 from tkinter import ttk
 import tkinter as tk
