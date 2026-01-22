@@ -16,37 +16,49 @@ class FileTreeWidget:
     ICON_FOLDER = "📁"
     ICON_FILE = "📄"
 
-    def __init__(self, parent, file_manager):
+    def __init__(self, parent, file_manager, row=None):
         self.file_manager = file_manager
         self.file_tree_items = {}
         self.on_file_selected = None  # Callback for file selection
         self.on_file_deleted = None  # Callback for file deletion
+        self.parent_row = row
 
         self._create_widget(parent)
 
     def _create_widget(self, parent):
         """Create the tree view widget"""
-        # Frame for tree and scrollbar
+        #Frame for tree and scrollbar
         tree_frame = ttk.Frame(parent)
-        tree_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+        # USE GRID INSTEAD OF PACK
+        if self.parent_row is not None:
+            tree_frame.grid(row=self.parent_row, column=0, sticky="nsew", pady=(0, 10))
+        else:
+            tree_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+        # Configure tree_frame for responsiveness
+        tree_frame.rowconfigure(0, weight=1)
+        tree_frame.columnconfigure(0, weight=1)
 
         # Scrollbar
         tree_scroll = ttk.Scrollbar(tree_frame)
-        tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        tree_scroll.grid(row=0, column=1, sticky="ns") # CHANGED from pack
 
         # Treeview
         self.tree = ttk.Treeview(
             tree_frame,
             yscrollcommand=tree_scroll.set,
-            selectmode='browse',
+            selectmode="browse",
             height=8
         )
-        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.tree.grid(row=0, column=0, sticky="nsew") # CHANGED from pack
         tree_scroll.config(command=self.tree.yview)
 
-        # Bind events
+        # Bindings
         self.tree.bind('<Double-Button-1>', self._on_double_click)
         self.tree.bind('<Button-3>', self._on_right_click)
+
 
     def populate(self, filter_text=""):
         """Populate tree with log files"""

@@ -7,8 +7,9 @@ import datetime
 class LogViewerWidget:
     """Manage the log content viewer component"""
 
-    def __init__(self, parent):
+    def __init__(self, parent, row=None):
         self.current_filepath = None
+        self.parent_row = row
         self._create_widget(parent)
 
 

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from tkcalendar import Calendar
 from UI_Components.FileTreeWidget import FileTreeWidget
 from KeyloggerEngine import KeyloggerEngine
@@ -32,14 +30,15 @@ class KeyloggerViewerApp:
 
         # State
         self.current_executable = "Not running"
+        self.search_var = tk.StringVar()  # Initialize here for safety
 
         # Build UI
-        self._create_ui()
+        self.create_ui()
 
         # Start status updates
         self._update_status()
 
-    def _create_ui(self):
+    def create_ui(self):
         """Create the complete UI"""
         # Main frame
         main_frame = ttk.Frame(self.root)
@@ -112,7 +111,7 @@ class KeyloggerViewerApp:
         search_frame.pack(fill=tk.X, pady=(0, 10))
 
         ttk.Label(search_frame, text="🔍", font=("Arial", 12)).pack(side=tk.LEFT, padx=(0, 5))
-        self.search_var = tk.StringVar()
+        # self.search_var is now initialized in __init__
         self.search_var.trace('w', lambda *args: self.file_tree.populate(self.search_var.get()))
         search_entry = ttk.Entry(search_frame, textvariable=self.search_var)
         search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
