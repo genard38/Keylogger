@@ -44,9 +44,17 @@ class KeyloggerViewerApp:
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
+
+        #Use PanedWindow to make panels resizable (draggable)
+        paned_window = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
+        paned_window.pack(fill=tk.BOTH, expand=True)
+
         # Left panel
-        left_panel = ttk.Frame(main_frame, width=300)
-        left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 10))
+        left_panel = ttk.Frame(paned_window, width=300)
+        paned_window.add(left_panel, weight=0)
+
+
+
 
         # Control panel
         self._create_control_panel(left_panel)
@@ -67,7 +75,11 @@ class KeyloggerViewerApp:
 
         # Right panel
         right_panel = ttk.Frame(main_frame)
-        right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        paned_window.add(right_panel, weight=1)
+
+
+        # right_panel = ttk.Frame(main_frame)
+        # right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Status header
         self._create_status_header(right_panel)
