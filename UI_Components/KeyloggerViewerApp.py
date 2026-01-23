@@ -11,9 +11,6 @@ import datetime
 import os
 
 
-
-
-
 class KeyloggerViewerApp:
     """Main application orchestrating all components"""
 

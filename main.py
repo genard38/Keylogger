@@ -1,4 +1,4 @@
-from KeyloggerViewerApp import KeyloggerViewerApp
+from UI_Components.KeyloggerViewerApp import KeyloggerViewerApp
 from tkinter import ttk
 import tkinter as tk
 
