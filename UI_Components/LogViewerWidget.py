@@ -1,104 +1,93 @@
-from tkinter import ttk, scrolledtext
-import tkinter as tk
-import os
-import datetime
 
+
+import dearpygui.dearpygui as dpg
+import datetime
+import os
 
 class LogViewerWidget:
-    """Manage the log content viewer component"""
+    """Long viewer widget - Dear PyGui version"""
 
-    def __init__(self, parent, row=None):
+    def __init__(self, parent_id):
+        self.parent_id = parent_id
         self.current_filepath = None
-        self.parent_row = row
-        self._create_widget(parent)
+        self.ui_ids = {}
+
+        self._create_widget()
 
 
-    def _create_widget(self, parent):
+    def _create_widget(self):
         """Create the viewer widget"""
-        # Date label
-        self.date_label = ttk.Label(
-            parent,
-            text="No date selected",
-            font=("Arial", 12, "bold")
-        )
-        self.date_label.pack(pady=5)
+        with dpg.group(parent=self.parent_id):
 
-        # Text viewer
-        view_frame = ttk.Frame(parent)
-        view_frame.pack(fill=tk.BOTH, expand=True)
 
-        self.text_widget = scrolledtext.ScrolledText(
-            view_frame,
-            wrap=tk.WORD,
-            font=("Consolas", 9),
-            bg="#1e1e1e",
-            fg="#d4d4d4",
-            insertbackground="white"
-        )
-        self.text_widget.pack(fill=tk.BOTH, expand=True)
+            # Date label
+            self.ui_ids['date_label'] = dpg.add_text(
+                "No date selected",
+                color = (200, 200, 255)
+            )
 
-        # Info label
-        info_frame = ttk.Frame(parent)
-        info_frame.pack(fill=tk.X, pady=(10, 0))
+            dpg.add_separator()
+            dpg.add_spacer(height=5)
 
-        self.info_label = ttk.Label(
-            info_frame,
-            text="Start keylogger or select a date to view logs",
-            font=("Arial", 9),
-            foreground="gray"
-        )
-        self.info_label.pack(side=tk.LEFT)
+            # Log content viewer (scrollable)
+            with dpg.child_window(height=-40):  # -40 leaves room for info label
+                self.ui_ids['log_text'] = dpg.add_input_text(
+                    multiline=True,         # Multiple lines
+                    readonly=True,          # Can't edit
+                    width=-1,               # FIX: Use -1 to fill parent width
+                    height=-1,              # FIX: Use -1 to fill parent height
+                    tab_input=True          # Tab creates tab character instead of changing focus
+                )
 
+            dpg.add_spacer(height=5)
+
+            # Info label at bottom (MOVED outside the child window)
+            self.ui_ids['info_label'] = dpg.add_text(
+                "Select a file to view logs",
+                color=(150, 150, 255)
+            )
 
     def load_file(self, filepath, file_manager):
         """Load and display a log file"""
         self.current_filepath = filepath
         filename = os.path.basename(filepath)
 
-        # Extract and display date
+        # === Show loading indicator ===
+        dpg.set_value(self.ui_ids['info_label'], "Loading...")
+        dpg.configure_item(self.ui_ids['info_label'], color=(255, 255, 0))  # Yellow
+        # =========================================
+
+
+        # Update date label
         try:
-            date_part = filename.replace("keylog_", "").replace(".txt", "")
+            date_part = filename.replace("keylog_","").replace(".txt","")
             date_obj = datetime.datetime.strptime(date_part, "%Y-%m-%d")
-            self.date_label.config(text=f"Log for: {date_obj.strftime('%B %d, %Y')}")
+            date_str = date_obj.strftime("%B %d, %Y")
+            dpg.set_value(self.ui_ids['date_label'],f"Log for: {date_str}")
         except:
-            self.date_label.config(text=f"Log: {filename}")
+            dpg.set_value(self.ui_ids['date_label'], f"Log for: {filename}")
 
         # Load content
-        self.text_widget.delete(1.0, tk.END)
-
         try:
             content = file_manager.read_file(filepath)
-            self.text_widget.insert(1.0, content)
-            self.text_widget.see(tk.END)
-            self.info_label.config(text=f"Loaded: {filename}", foreground="green")
-        except Exception as e:
-            self.text_widget.insert(1.0, f"Error reading file: {str(e)}")
-            self.info_label.config(text=str(e), foreground="red")
+            dpg.set_value(self.ui_ids['log_text'], content)
 
+            dpg.set_value(self.ui_ids['info_label'], f"Loaded: {filename}")
+            dpg.configure_item(self.ui_ids['info_label'], color=(0,255,0))
+        except Exception  as e:
+            error_msg = f"Error reading file: {str(e)}"
+            dpg.set_value(self.ui_ids['log_text'], error_msg)
+            dpg.set_value(self.ui_ids['info_label'], str(e))
+            dpg.configure_item(self.ui_ids['info_label'], color=(255,0,0))
 
     def refresh_current(self, file_manager):
         """Refresh the currently displayed file"""
-        if not self.current_filepath:
-            return
-
-        current_position = self.text_widget.yview()[0]
-
-        try:
-            content = file_manager.read_file(self.current_filepath)
-            self.text_widget.delete(1.0, tk.END)
-            self.text_widget.insert(1.0, content)
-
-            # Smart scroll: go to bottom if user was near bottom, otherwise maintain position
-            if current_position > 0.9:
-                self.text_widget.see(tk.END)
-            else:
-                self.text_widget.yview_moveto(current_position)
-        except:
-            pass  # File might be locked
-
+        if self.current_filepath:
+            self.load_file(self.current_filepath, file_manager)
 
     def clear(self):
         """Clear the viewer"""
         self.current_filepath = None
-        self.text_widget.delete(1.0, tk.END)
-        self.date_label.config(text="File deleted")
+        dpg.set_value(self.ui_ids['log_text'], "")
+        dpg.set_value(self.ui_ids['date_label'], "File deleted")
+        dpg.set_value(self.ui_ids['info_label'], "")

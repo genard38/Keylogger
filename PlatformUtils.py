@@ -4,6 +4,7 @@ import platform
 class PlatformUtils:
     """Handle platform-specific operations for window detection"""
 
+
     @staticmethod
     def setup_platform_libraries():
         """Import platform-specific libraries and set up window detection"""

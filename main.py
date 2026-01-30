@@ -1,29 +1,68 @@
+
+
+import dearpygui.dearpygui as dpg
 from UI_Components.KeyloggerViewerApp import KeyloggerViewerApp
-from tkinter import ttk
-import tkinter as tk
+
+# Create context
+dpg.create_context()
 
 
-def main():
-    root = tk.Tk()
+def setup_theme():
+    """Create and apply Windows 11-like dark theme"""
 
-    # Configure styles
-    style = ttk.Style()
-    style.theme_use('clam')  # A modern theme
-    style.configure("Start.TButton", foreground="green")
-    style.configure("Stop.TButton", foreground="red")
+    with dpg.theme() as global_theme:
 
-    app = KeyloggerViewerApp(root)
+        with dpg.theme_component(dpg.mvAll):
+            # Colors
+            dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (30, 30, 30))  # Dark background
+            dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (40, 40, 40))  # Slightly lighter
+            dpg.add_theme_color(dpg.mvThemeCol_Border, (60, 60, 60))
+            dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (50, 50, 50))
+            dpg.add_theme_color(dpg.mvThemeCol_FrameBgHovered, (70, 70, 70))
+            dpg.add_theme_color(dpg.mvThemeCol_FrameBgActive, (80, 80, 80))
+            dpg.add_theme_color(dpg.mvThemeCol_TitleBg, (20, 20, 20))
+            dpg.add_theme_color(dpg.mvThemeCol_TitleBgActive, (30, 30, 30))
+            dpg.add_theme_color(dpg.mvThemeCol_Button, (0, 120, 215))  # Windows blue
+            dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (0, 140, 235))
+            dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (0, 100, 195))
+            dpg.add_theme_color(dpg.mvThemeCol_Header, (0, 120, 215))
+            dpg.add_theme_color(dpg.mvThemeCol_HeaderHovered, (0, 140, 235))
+            dpg.add_theme_color(dpg.mvThemeCol_HeaderActive, (0, 100, 195))
+            dpg.add_theme_color(dpg.mvThemeCol_Text, (220, 220, 220))
 
-    # Handle window close
-    def on_closing():
-        # Ensure keylogger is stopped gracefully
-        if hasattr(app, 'keylogger') and app.keylogger.is_running:
-            app.keylogger.stop()
-        root.destroy()
+            # Styling
+            dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
+            dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, 5)
+            dpg.add_theme_style(dpg.mvStyleVar_ChildRounding, 5)
+            dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 8, 6)
+            dpg.add_theme_style(dpg.mvStyleVar_ItemSpacing, 8, 8)
 
-    root.protocol("WM_DELETE_WINDOW", on_closing)
-    root.mainloop()
+    dpg.bind_theme(global_theme)
+
+    # Call it after create_context
+# dpg.create_context()
+setup_theme()  # ADD THIS
 
 
-if __name__ == "__main__":
-    main()
+
+
+
+# Create app (this builds the UI)
+app = KeyloggerViewerApp()
+
+# 3. Setup viewport
+dpg.create_viewport(title="Keylogger with Viewer", width=1200, height=700)
+dpg.setup_dearpygui()
+
+# Set primary window
+dpg.set_primary_window("primary_window", True)
+
+# Show and start
+dpg.show_viewport()
+
+while dpg.is_dearpygui_running():
+    app._update_loop()
+    dpg.render_dearpygui_frame()
+
+# 6. Cleanup (runs after window closes)
+dpg.destroy_context()
