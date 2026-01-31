@@ -82,7 +82,7 @@ class KeyloggerViewerApp:
             with dpg.table(header_row=False, borders_innerV=True, tag="main_table"):
 
                 # Column 0: Left panel (fixed width)
-                dpg.add_table_column(width_fixed=True, init_width_or_weight=320)
+                dpg.add_table_column(width_fixed=True, init_width_or_weight=255)
 
                 # Column 1: Right panel (fills remaining space)
                 dpg.add_table_column()
@@ -147,7 +147,6 @@ class KeyloggerViewerApp:
         )
         dpg.add_spacer(height=10)
 
-        dpg.add_spacer(height=20)
         dpg.add_text("Selected Date", color=(200, 200, 255))
         dpg.add_separator()
 
@@ -158,10 +157,19 @@ class KeyloggerViewerApp:
             'month': datetime.datetime.now().month - 1 # 0-indexed
         }
 
-        self.ui_ids['date_picker'] = dpg.add_date_picker(
-            default_value=default_date,
-            callback=self._on_date_selected
-        )
+        # Center the calendar using a layout table
+        with dpg.table(header_row=False):
+            dpg.add_table_column()  # Left spacer
+            dpg.add_table_column(width_fixed=True)  # Calendar
+            dpg.add_table_column()  # Right spacer
+
+            with dpg.table_row():
+                dpg.add_spacer()
+                self.ui_ids['date_picker'] = dpg.add_date_picker(
+                    default_value=default_date,
+                    callback=self._on_date_selected
+                )
+                dpg.add_spacer()
 
         dpg.add_spacer(height=10)
 
