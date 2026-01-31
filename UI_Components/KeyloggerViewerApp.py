@@ -1,5 +1,4 @@
 
-
 import dearpygui.dearpygui as dpg
 from LogFileManager import LogFileManager
 from KeyloggerEngine import KeyloggerEngine
