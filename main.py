@@ -3,28 +3,34 @@ import dearpygui.dearpygui as dpg
 from UI_Components.KeyloggerViewerApp import KeyloggerViewerApp
 from UI_Components.ThemeManager import ThemeManager
 
-# Create context
-dpg.create_context()
 
-# Apply theme
-ThemeManager.setup_theme()
+def main():
+    # Create context
+    dpg.create_context()
 
-# Create app (this builds the UI)
-app = KeyloggerViewerApp()
+    # Apply theme
+    ThemeManager.setup_theme()
 
-# 3. Setup viewport
-dpg.create_viewport(title="Keylogger with Viewer", width=1200, height=700)
-dpg.setup_dearpygui()
+    # Create app (this builds the UI)
+    app = KeyloggerViewerApp()
 
-# Set primary window
-dpg.set_primary_window("primary_window", True)
+    # 3. Setup viewport
+    dpg.create_viewport(title="Keylogger with Viewer", width=1200, height=700)
+    dpg.setup_dearpygui()
 
-# Show and start
-dpg.show_viewport()
+    # Set primary window
+    dpg.set_primary_window("primary_window", True)
 
-while dpg.is_dearpygui_running():
-    app._update_loop()
-    dpg.render_dearpygui_frame()
+    # Show and start
+    dpg.show_viewport()
 
-# 6. Cleanup (runs after window closes)
-dpg.destroy_context()
+    while dpg.is_dearpygui_running():
+        app._update_loop()
+        dpg.render_dearpygui_frame()
+
+    # 6. Cleanup (runs after window closes)
+    dpg.destroy_context()
+
+
+if __name__ == "__main__":
+    main()
