@@ -58,11 +58,6 @@ class FileTreeWidget:
         self._last_hash = new_hash
         self._last_filter = filter_text
 
-        # Add temporary loading text
-        if not dpg.does_item_exist("tree_loading_indicator"):
-            dpg.add_text("Loading files...", tag="tree_loading_indicator", parent="file_tree_window",
-                         color=(255, 255, 0))
-
         # Delete existing tree content
         if dpg.does_item_exist("tree_placeholder"):
             dpg.delete_item("tree_placeholder")
@@ -72,6 +67,11 @@ class FileTreeWidget:
         if children:
             for child in children:
                 dpg.delete_item(child)
+
+        # Add temporary loading text (Add this AFTER clearing children)
+        if not dpg.does_item_exist("tree_loading_indicator"):
+            dpg.add_text("Loading files...", tag="tree_loading_indicator", parent="file_tree_window",
+                         color=(255, 255, 0))
 
         # Clear mapping
         self.file_tree_items.clear()
