@@ -1,0 +1,48 @@
+
+[--- Logging Started: 2026-02-07 13:11:58 ---]
+[--- Active Window: python.exe - Keylogger with Viewer ---]
+
+
+[--- msedge.exe - 1220 Juan Luna St - Google Maps and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:12:02 ---]
+<ctrl_l><backspace>monkeoytype.com<enter>
+
+[--- msedge.exe - monkeoytype.com and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:12:16 ---]
+<backspace>monkeytype.com<enter>
+
+[--- msedge.exe - Monkeytype | A minimalistic, customizable typing test and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:12:30 ---]
+<shift>It<space>is<space>possible<space>to<space>fly<space>without<space>motors,<space>but<space>not<space>without<space>knowledge<space>and<space>skill.<shift_r>The<space>only<space>ones<space>who<space>should<space>kiill<space>ar<backspace><backspace><backspace><backspace><backspace><backspace>ll<space>are<space>those<space>prepared<space>to<space>br<space><backspace><backspace>e<space>killed.<tab><enter><shift_r>Dones<backspace><backspace><backspace>esn't<space>matter<space>how<space><backspace><backspace><backspace><backspace>who<space>you're<space>born<space>to...<space><shift_r>Everyone's<space>still<space>a<space>child<space>of<space>the<space>sea<shift_r>!
+
+[--- python.exe - Keylogger with Viewer --- 2026-02-07 13:13:24 ---]
+<left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><ctrl_l><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left><left>
+
+[--- msedge.exe - Monkeytype | A minimalistic, customizable typing test and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:13:43 ---]
+<shift_r>Snow<space>isn't<space>just<space>pretty.<space><shift>It<space>also<space>cleanses<space>ouor<space><backspace><backspace><backspace>r<space>world,<space>our<space>sense,<space>a<backspace><backspace><backspace>s,<space>and<space>a<space>kind<space>of<space>weary<space>familiarity.<shift_r>Results<space>are<space>not<space>gura<f9><backspace><backspace>aranteed,<space>but<space>if<space>not<space>perfectly<space>satisfid<backspace>ed,<space>ou<backspace><backspace>your<space>wasted<space>time<space>wil<space>be<space><backspace><backspace><backspace><backspace>l<space>be<space>refunded.<shift>If<space>omse<backspace><backspace><backspace><backspace>somebody<space>else<space>has<space>it<space>must<space><backspace><backspace><backspace>ch<space>more<backspace><ctrl_l>
+
+[--- msedge.exe - New tab and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:15:16 ---]
+<enter>asdfadfasfasfasdfasdf<ctrl_l>
+
+[--- msedge.exe - New tab and 4 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:15:18 ---]
+<enter><ctrl_l>
+
+[--- msedge.exe - New tab and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:15:21 ---]
+<ctrl_l>
+
+[--- msedge.exe - INC Directory and 2 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:15:21 ---]
+<ctrl_l><ctrl_l>
+
+[--- msedge.exe - New tab and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:15:22 ---]
+fasdfsdfasdf<ctrl_l>
+
+[--- msedge.exe - INC Directory and 2 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:15:24 ---]
+afsdfasdf<ctrl_l>dfasdfasdf
+
+[--- msedge.exe - Save As --- 2026-02-07 13:15:26 ---]
+<enter>fadfasdfa
+
+[--- msedge.exe - New tab and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:15:38 ---]
+asdfadfadfafasdfasd<enter>
+
+[--- msedge.exe - asdfadfadfafasdfasd - Search and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 13:15:40 ---]
+dfa
+[--- Logging Started: 2026-02-07 13:52:20 ---]
+[--- Active Window: python.exe - Keylogger with Viewer ---]
