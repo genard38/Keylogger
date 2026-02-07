@@ -76,8 +76,10 @@ class LogViewerWidget:
 
     def refresh_current(self, file_manager):
         """Refresh the currently displayed file."""
-        if self.current_filepath:
-            self.load_file(self.current_filepath, file_manager)
+        if not self.current_filepath:
+            return
+
+        self.load_file(self.current_filepath, file_manager)
 
     def clear(self):
         """Clear the viewer."""
