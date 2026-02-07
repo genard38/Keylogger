@@ -8,7 +8,6 @@ dpg.create_context()
 
 # Apply theme
 ThemeManager.setup_theme()
-
 # Create app (this builds the UI)
 app = KeyloggerViewerApp()
 

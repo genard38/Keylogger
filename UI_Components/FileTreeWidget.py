@@ -22,7 +22,7 @@ class FileTreeWidget:
         self.on_file_selected = None # Callback
         self.on_file_deleted = None # Callback
 
-        # Create the widget
+
         self._create_widget()
 
     def _create_widget(self, tree_window=None):

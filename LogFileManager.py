@@ -49,6 +49,15 @@ class LogFileManager:
 
         return organized
 
+    # def get_file_tail(self, filepath, num_lines=50):
+    #     """Read las N lines of a file for better performance"""
+    #     try:
+    #         with open(filepath ,'r', encoding='utf-8') as f:
+    #             lines = f.readline()
+    #             return ''.join(lines[-num_lines:])
+    #     except Exception as e:
+    #         return ""
+
     def read_file(self, filepath):
         """Read content from a log file"""
         try:
@@ -56,6 +65,14 @@ class LogFileManager:
                 return f.read()
         except Exception as e:
             raise IOError(f"Failed to read file: {str(e)}")
+
+    def write_log(self, filepath, content):
+        """Append content to a log file"""
+        try:
+            with open(filepath, 'a', encoding='utf-8') as f:
+                f.write(content)
+        except Exception as e:
+            print(f"Error writing to log file: {e}")
 
     def delete_file(self, filepath):
         """Delete a log file"""
