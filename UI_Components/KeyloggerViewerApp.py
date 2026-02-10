@@ -1,4 +1,3 @@
-
 import dearpygui.dearpygui as dpg
 from LogFileManager import LogFileManager
 from KeyloggerEngine import KeyloggerEngine
@@ -12,22 +11,28 @@ import glob
 import queue
 import threading
 
+
 class KeyloggerViewerApp:
     """Main application - Dear PyGui version"""
+
+    # Constants - These define magic numbers once at the top
+    UPDATE_INTERVAL_SECONDS = 2.0
+    KB_TO_MB_THRESHOLD = 1024  # Switch to MB after 1024 KB
+
     def __init__(self):
         # Initialize backend components
         self.get_active_window = PlatformUtils.setup_platform_libraries()
         self.file_manager = LogFileManager()
-        
+
         # Thread-safe queue for UI updates
         self.log_update_queue = queue.Queue()
-        
+
         self.keylogger = KeyloggerEngine(
             self.file_manager,
             self.get_active_window,
             log_update_queue=self.log_update_queue
         )
-        
+
         self.current_viewing_file = None
         self.auto_scroll_enabled = True
 
@@ -55,7 +60,7 @@ class KeyloggerViewerApp:
                 pos=(400, 250)
         ):
             dpg.add_text("Keylogger with Viewer", color=(100, 150, 255))
-            dpg.add_text("Version 2.0 - Dear PyGui Edition")
+            dpg.add_text("Version 2.1 - Storage Monitor Edition")
             dpg.add_spacer(height=10)
             dpg.add_text("A modern keylogging and log viewing application")
             dpg.add_spacer(height=10)
@@ -97,7 +102,8 @@ class KeyloggerViewerApp:
         with dpg.tooltip(self.ui_ids['start_btn']):
             dpg.add_text("Begin recording all keystrokes")
 
-        self.ui_ids['stop_btn'] = dpg.add_button(label="⏸ Stop Logging", callback=self._stop_logging, width=-1, enabled=False)
+        self.ui_ids['stop_btn'] = dpg.add_button(label="⏸ Stop Logging", callback=self._stop_logging, width=-1,
+                                                 enabled=False)
         dpg.bind_item_theme(self.ui_ids['stop_btn'], "red_button_theme")
         with dpg.tooltip(self.ui_ids['stop_btn']):
             dpg.add_text("Stop recording keystrokes")
@@ -114,7 +120,8 @@ class KeyloggerViewerApp:
         dpg.add_text("Selected Date", color=(200, 200, 255))
         dpg.add_separator()
 
-        default_date = {'month_day': datetime.datetime.now().day, 'year': datetime.datetime.now().year - 1900, 'month': datetime.datetime.now().month - 1}
+        default_date = {'month_day': datetime.datetime.now().day, 'year': datetime.datetime.now().year - 1900,
+                        'month': datetime.datetime.now().month - 1}
         with dpg.table(header_row=False):
             dpg.add_table_column()
             dpg.add_table_column(width_fixed=True)
@@ -189,7 +196,8 @@ class KeyloggerViewerApp:
     def _load_from_date_picker(self, sender, app_data, user_data):
         """Load log file from date picker selection"""
         date_data = dpg.get_value(self.ui_ids['date_picker'])
-        selected_date = datetime.datetime(year=date_data['year'] + 1900, month=date_data['month'] + 1, day=date_data['month_day'])
+        selected_date = datetime.datetime(year=date_data['year'] + 1900, month=date_data['month'] + 1,
+                                          day=date_data['month_day'])
         filepath = self.file_manager.get_log_filename(selected_date)
 
         if os.path.exists(filepath):
@@ -216,7 +224,7 @@ class KeyloggerViewerApp:
                 auto_scroll=True
             )
         elif self.current_viewing_file:
-             self._refresh_log_viewer(self.current_viewing_file)
+            self._refresh_log_viewer(self.current_viewing_file)
 
     def _on_search_changed(self, sender, app_data, user_data):
         self.file_tree.populate(dpg.get_value(sender))
@@ -254,7 +262,7 @@ class KeyloggerViewerApp:
             pass
 
         current_time = time.time()
-        if current_time - self.last_update_time >= 2.0:
+        if current_time - self.last_update_time >= self.UPDATE_INTERVAL_SECONDS:
             self.last_update_time = current_time
             self._update_status()
 
@@ -272,6 +280,91 @@ class KeyloggerViewerApp:
 
         file_count = len(glob.glob("keylogs/keylog_*.txt"))
         dpg.set_value("file_count_text", f"Files: {file_count}")
+
+        # NEW: Update storage indicator
+        self._update_storage_indicator()
+
+    # ==================================================================
+    # NEW METHODS: Storage Monitoring Feature
+    # ==================================================================
+
+    def _get_today_log_size(self):
+        """
+        Calculate the size of today's log file in bytes.
+
+        Returns:
+            int: File size in bytes, or 0 if file doesn't exist
+
+        Principle: Single Responsibility - This method does ONE thing
+        """
+        today_log_file = self.file_manager.get_log_filename()
+
+        try:
+            if os.path.exists(today_log_file):
+                return os.path.getsize(today_log_file)
+            return 0
+        except OSError as e:
+            # Defensive programming - handle potential errors
+            print(f"Error getting file size: {e}")
+            return 0
+
+    def _format_file_size(self, size_bytes):
+        """
+        Format file size with appropriate unit (KB or MB).
+
+        Args:
+            size_bytes (int): Size in bytes
+
+        Returns:
+            str: Formatted string like "125 KB" or "1.5 MB"
+
+        Principle: Separation of Concerns - Logic is separate from display
+        """
+        size_kb = size_bytes / 1024.0
+
+        if size_kb < self.KB_TO_MB_THRESHOLD:
+            # Display in KB
+            return f"{size_kb:.1f} KB"
+        else:
+            # Convert to MB when exceeding threshold
+            size_mb = size_kb / 1024.0
+            return f"{size_mb:.2f} MB"
+
+    def _get_storage_color(self, size_bytes):
+        """
+        Determine color based on file size.
+
+        Args:
+            size_bytes (int): Size in bytes
+
+        Returns:
+            tuple: RGB color tuple
+
+        Principle: DRY (Don't Repeat Yourself) - Centralize color logic
+        """
+        size_kb = size_bytes / 1024.0
+
+        if size_kb < 100:
+            return (150, 200, 255)  # Light blue - normal
+        elif size_kb < 512:
+            return (255, 200, 100)  # Orange - warning
+        else:
+            return (255, 100, 100)  # Red - high usage
+
+    def _update_storage_indicator(self):
+        """
+        Update the storage indicator in the log viewer.
+
+        This is called periodically by _update_status()
+
+        Principle: Composition - Combines smaller methods to achieve goal
+        """
+        size_bytes = self._get_today_log_size()
+        formatted_size = self._format_file_size(size_bytes)
+        color = self._get_storage_color(size_bytes)
+
+        # Update the storage display in the log viewer widget
+        self.log_viewer.update_storage(formatted_size, color)
 
     def _create_button_themes(self):
         with dpg.theme(tag="green_button_theme"):

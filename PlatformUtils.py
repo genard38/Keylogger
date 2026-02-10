@@ -27,11 +27,15 @@ class PlatformUtils:
             def get_active_window():
                 try:
                     window = win32gui.GetForegroundWindow()
+                    if not window: # No window handle
+                        return "Unknown"
+
                     pid = win32process.GetWindowThreadProcessId(window)[1]
                     process = psutil.Process(pid)
                     window_title = win32gui.GetWindowText(window)
                     return f"{process.name()} - {window_title}"
-                except:
+                except Exception as e:
+                    print(f" Error getting active window title: {e}")
                     return "Unknown"
 
             return get_active_window

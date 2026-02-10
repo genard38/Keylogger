@@ -1,7 +1,7 @@
-
 import dearpygui.dearpygui as dpg
 import datetime
 import os
+
 
 class LogViewerWidget:
     """Log viewer widget - Dear PyGui version"""
@@ -15,7 +15,20 @@ class LogViewerWidget:
     def _create_widget(self):
         """Create the viewer widget"""
         with dpg.group(parent=self.parent_id):
-            self.ui_ids['date_label'] = dpg.add_text("No date selected", color=(200, 200, 255))
+            # Replace "No date selected" with storage indicator header
+            with dpg.group(horizontal=True):
+                dpg.add_text("Storage:", color=(200, 200, 200))
+                self.ui_ids['storage_label'] = dpg.add_text("0 KB", color=(150, 200, 255))
+                with dpg.tooltip(self.ui_ids['storage_label']):
+                    dpg.add_text("Storage used by today's log file")
+
+                dpg.add_spacer(width=30)
+                dpg.add_text("|", color=(100, 100, 100))
+                dpg.add_spacer(width=30)
+
+                dpg.add_text("Viewing:", color=(200, 200, 200))
+                self.ui_ids['date_label'] = dpg.add_text("No file selected", color=(150, 150, 150))
+
             dpg.add_separator()
             dpg.add_spacer(height=5)
 
@@ -44,9 +57,11 @@ class LogViewerWidget:
             date_part = filename.replace("keylog_", "").replace(".txt", "")
             date_obj = datetime.datetime.strptime(date_part, "%Y-%m-%d")
             date_str = date_obj.strftime("%B %d, %Y")
-            dpg.set_value(self.ui_ids['date_label'], f"Log for: {date_str}")
+            dpg.set_value(self.ui_ids['date_label'], date_str)
+            dpg.configure_item(self.ui_ids['date_label'], color=(100, 200, 255))
         except:
-            dpg.set_value(self.ui_ids['date_label'], f"Log for: {filename}")
+            dpg.set_value(self.ui_ids['date_label'], filename)
+            dpg.configure_item(self.ui_ids['date_label'], color=(150, 150, 150))
 
         try:
             content = file_manager.read_file(filepath)
@@ -74,6 +89,12 @@ class LogViewerWidget:
         else:
             dpg.configure_item(self.ui_ids['log_text'], tracked=False)
 
+    def update_storage(self, formatted_size: str, color: tuple):
+        """Update the storage indicator display."""
+        if 'storage_label' in self.ui_ids:
+            dpg.set_value(self.ui_ids['storage_label'], formatted_size)
+            dpg.configure_item(self.ui_ids['storage_label'], color=color)
+
     def refresh_current(self, file_manager):
         """Refresh the currently displayed file."""
         if not self.current_filepath:
@@ -86,4 +107,5 @@ class LogViewerWidget:
         self.current_filepath = None
         self.update_content("")
         dpg.set_value(self.ui_ids['date_label'], "File deleted")
+        dpg.configure_item(self.ui_ids['date_label'], color=(255, 100, 100))
         dpg.set_value(self.ui_ids['info_label'], "")

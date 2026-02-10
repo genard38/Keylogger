@@ -46,3 +46,32 @@ asdfadfadfafasdfasd<enter>
 dfa
 [--- Logging Started: 2026-02-07 13:52:20 ---]
 [--- Active Window: python.exe - Keylogger with Viewer ---]
+
+[--- Logging Started: 2026-02-07 15:57:49 ---]
+[--- Active Window: python.exe - Keylogger with Viewer ---]
+
+
+[--- msedge.exe - New tab and 2 more pages - Personal - Microsoft​ Edge --- 2026-02-07 15:58:07 ---]
+fasdfasdfsdfasdasd<ctrl_l><backspace>monkeyt<enter>
+[--- Logging Started: 2026-02-07 15:58:49 ---]
+[--- Active Window: python.exe - Keylogger with Viewer ---]
+
+
+[--- msedge.exe - Monkeytype | A minimalistic, customizable typing test and 2 more pages - Personal - Microsoft​ Edge --- 2026-02-07 15:58:54 ---]
+<shift_r><shift_r><shift_r><shift_r><shift_r><shift_r>Be<space>the<space>change<space>that<space>you<space>wish<space>to<space>see<space>in<space>the<space>world.
+[--- Logging Started: 2026-02-07 15:59:34 ---]
+[--- Active Window: python.exe - Keylogger with Viewer ---]
+
+
+[--- msedge.exe - Monkeytype | A minimalistic, customizable typing test and 2 more pages - Personal - Microsoft​ Edge --- 2026-02-07 15:59:44 ---]
+<shift>You<space>asked<space>if<space>you<space>werwe<space>bad<backspace><backspace><backspace><backspace><backspace><backspace>e<space>bad<space>for<space>me.<space><shift_r>That's<space>not<space>it.<space><shift_r>We<space>are<space>bad<space>rf<backspace><backspace>for<space>each<space>other.
+[--- Logging Started: 2026-02-07 17:05:46 ---]
+
+
+[--- msedge.exe - New tab and 4 more pages - Personal - Microsoft​ Edge --- 2026-02-07 17:06:07 ---]
+<ctrl_l>
+[--- Logging Started: 2026-02-07 17:07:47 ---]
+
+
+[--- msedge.exe - Monkeytype | A minimalistic, customizable typing test and 3 more pages - Personal - Microsoft​ Edge --- 2026-02-07 17:08:00 ---]
+<shift_r>Cleaning<space>your<space>house<space>while<space>kids<space>are<space>around<space>is<space>like<space>shoveling<space>the<space>walk<space>shi<backspace><backspace><backspace>while<space>it's<space>still<space>snowing.
