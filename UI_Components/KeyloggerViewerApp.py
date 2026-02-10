@@ -180,7 +180,13 @@ class KeyloggerViewerApp:
         if not os.path.exists(today_log_file):
             with open(today_log_file, 'w', encoding='utf-8') as f:
                 f.write("")
-        self._refresh_log_viewer(today_log_file, auto_scroll=True)
+
+        # Use load_file instead of _refresh_log_viewer to set current_filepath
+        self.log_viewer.load_file(today_log_file, self.file_manager)
+        self.log_viewer.set_auto_scroll(True)
+
+        # Update storage indicator immediately
+        self._update_storage_indicator()
 
     def _stop_logging(self, sender, app_data, user_data):
         """Stop the keylogger"""
@@ -202,8 +208,12 @@ class KeyloggerViewerApp:
 
         if os.path.exists(filepath):
             self.log_viewer.load_file(filepath, self.file_manager)
+            # Update storage indicator immediately
+            self._update_storage_indicator()
         else:
             self.log_viewer.update_content(f"No logfile found for {selected_date.strftime('%B %d, %Y')}")
+            # No file, so storage should show 0 KB
+            self._update_storage_indicator()
 
     def _refresh_log_viewer(self, filepath, auto_scroll=False):
         """Reload log content and optionally scroll to bottom"""
@@ -232,10 +242,14 @@ class KeyloggerViewerApp:
     def _on_file_selected(self, filepath):
         self.current_viewing_file = filepath
         self.log_viewer.load_file(filepath, self.file_manager)
+        # Immediately update storage indicator for the selected file
+        self._update_storage_indicator()
 
     def _on_file_deleted(self, filepath):
         if self.log_viewer.current_filepath == filepath:
             self.log_viewer.clear()
+            # Update storage to show 0 KB
+            self._update_storage_indicator()
 
     def _on_autoscroll_toggled(self, sender, app_data, user_data):
         self.auto_scroll_enabled = app_data
@@ -288,21 +302,33 @@ class KeyloggerViewerApp:
     # NEW METHODS: Storage Monitoring Feature
     # ==================================================================
 
-    def _get_today_log_size(self):
+    def _get_current_file_size(self):
         """
-        Calculate the size of today's log file in bytes.
+        Calculate the size of the currently viewed log file in bytes.
 
         Returns:
-            int: File size in bytes, or 0 if file doesn't exist
+            int: File size in bytes, or 0 if no file is selected
 
         Principle: Single Responsibility - This method does ONE thing
         """
-        today_log_file = self.file_manager.get_log_filename()
+        # Get the filepath of the currently viewed file
+        current_file = self.log_viewer.current_filepath
+
+        # Debug logging
+        print(f"DEBUG: Getting file size for: {current_file}")
+
+        if not current_file:
+            print("DEBUG: No file selected, returning 0")
+            return 0  # No file selected
 
         try:
-            if os.path.exists(today_log_file):
-                return os.path.getsize(today_log_file)
-            return 0
+            if os.path.exists(current_file):
+                size = os.path.getsize(current_file)
+                print(f"DEBUG: File size: {size} bytes")
+                return size
+            else:
+                print(f"DEBUG: File doesn't exist: {current_file}")
+                return 0
         except OSError as e:
             # Defensive programming - handle potential errors
             print(f"Error getting file size: {e}")
@@ -355,13 +381,16 @@ class KeyloggerViewerApp:
         """
         Update the storage indicator in the log viewer.
 
-        This is called periodically by _update_status()
+        Shows the size of the currently selected/viewed file.
 
         Principle: Composition - Combines smaller methods to achieve goal
         """
-        size_bytes = self._get_today_log_size()
+        print("DEBUG: _update_storage_indicator called")
+        size_bytes = self._get_current_file_size()
         formatted_size = self._format_file_size(size_bytes)
         color = self._get_storage_color(size_bytes)
+
+        print(f"DEBUG: Updating storage display: {formatted_size}, color: {color}")
 
         # Update the storage display in the log viewer widget
         self.log_viewer.update_storage(formatted_size, color)

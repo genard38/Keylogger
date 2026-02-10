@@ -20,7 +20,7 @@ class LogViewerWidget:
                 dpg.add_text("Storage:", color=(200, 200, 200))
                 self.ui_ids['storage_label'] = dpg.add_text("0 KB", color=(150, 200, 255))
                 with dpg.tooltip(self.ui_ids['storage_label']):
-                    dpg.add_text("Storage used by today's log file")
+                    dpg.add_text("Storage used by currently viewed file")
 
                 dpg.add_spacer(width=30)
                 dpg.add_text("|", color=(100, 100, 100))
