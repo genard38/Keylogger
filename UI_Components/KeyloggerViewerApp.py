@@ -173,7 +173,6 @@ class KeyloggerViewerApp:
         dpg.configure_item(self.ui_ids['status_label'], color=(0, 255, 0))
 
         threading.Thread(target=self.keylogger.start, daemon=True).start()
-        print("Keylogger started")
 
         today_log_file = self.file_manager.get_log_filename()
         self.current_viewing_file = today_log_file
@@ -197,7 +196,6 @@ class KeyloggerViewerApp:
         dpg.configure_item(self.ui_ids['logging_status'], color=(255, 0, 0))
         dpg.set_value(self.ui_ids['status_label'], "Stopped")
         dpg.configure_item(self.ui_ids['status_label'], color=(255, 0, 0))
-        print("Keylogger stopped")
 
     def _load_from_date_picker(self, sender, app_data, user_data):
         """Load log file from date picker selection"""
@@ -314,20 +312,14 @@ class KeyloggerViewerApp:
         # Get the filepath of the currently viewed file
         current_file = self.log_viewer.current_filepath
 
-        # Debug logging
-        print(f"DEBUG: Getting file size for: {current_file}")
-
         if not current_file:
-            print("DEBUG: No file selected, returning 0")
             return 0  # No file selected
 
         try:
             if os.path.exists(current_file):
                 size = os.path.getsize(current_file)
-                print(f"DEBUG: File size: {size} bytes")
                 return size
             else:
-                print(f"DEBUG: File doesn't exist: {current_file}")
                 return 0
         except OSError as e:
             # Defensive programming - handle potential errors
@@ -385,12 +377,9 @@ class KeyloggerViewerApp:
 
         Principle: Composition - Combines smaller methods to achieve goal
         """
-        print("DEBUG: _update_storage_indicator called")
         size_bytes = self._get_current_file_size()
         formatted_size = self._format_file_size(size_bytes)
         color = self._get_storage_color(size_bytes)
-
-        print(f"DEBUG: Updating storage display: {formatted_size}, color: {color}")
 
         # Update the storage display in the log viewer widget
         self.log_viewer.update_storage(formatted_size, color)
