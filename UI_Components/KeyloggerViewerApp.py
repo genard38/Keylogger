@@ -35,6 +35,7 @@ class KeyloggerViewerApp:
 
         self.current_viewing_file = None
         self.auto_scroll_enabled = True
+        self.showing_calendar = True # Track which view is visible
 
         # State variables
         self.current_executable = "Not running"
@@ -111,38 +112,62 @@ class KeyloggerViewerApp:
         dpg.add_spacer(height=5)
         # Removed redundant logging_status text
 
-        dpg.add_text("Log Files", color=(200, 200, 255))
+        # Restored Log Files header with click handler
+        self.ui_ids['log_files_header'] = dpg.add_text("Log Files ▼", color=(200, 200, 255))
+        
+        # Make it clickable
+        with dpg.item_handler_registry() as registry:
+            dpg.add_item_clicked_handler(callback=self._toggle_calendar_view)
+        dpg.bind_item_handler_registry(self.ui_ids['log_files_header'], registry)
+        
         dpg.add_separator()
 
         # Removed search input
+        with dpg.group(tag="calendar_group", show=True):
+            dpg.add_text("Selected Date", color=(200, 200, 255))
+            dpg.add_separator()
 
-        dpg.add_text("Selected Date", color=(200, 200, 255))
-        dpg.add_separator()
+            default_date = {'month_day': datetime.datetime.now().day, 'year': datetime.datetime.now().year - 1900,
+                            'month': datetime.datetime.now().month - 1}
+            with dpg.table(header_row=False):
+                dpg.add_table_column()
+                dpg.add_table_column(width_fixed=True)
+                dpg.add_table_column()
+                with dpg.table_row():
+                    dpg.add_spacer()
+                    self.ui_ids['date_picker'] = dpg.add_date_picker(default_value=default_date)
+                    dpg.add_spacer()
 
-        default_date = {'month_day': datetime.datetime.now().day, 'year': datetime.datetime.now().year - 1900,
-                        'month': datetime.datetime.now().month - 1}
-        with dpg.table(header_row=False):
-            dpg.add_table_column()
-            dpg.add_table_column(width_fixed=True)
-            dpg.add_table_column()
-            with dpg.table_row():
-                dpg.add_spacer()
-                self.ui_ids['date_picker'] = dpg.add_date_picker(default_value=default_date)
-                dpg.add_spacer()
+            dpg.add_spacer(height=10)
+            dpg.add_button(label="Load Selected Date", callback=self._load_from_date_picker, width=-1)
+            dpg.add_spacer(height=10)
+            dpg.add_button(label="🔄 Refresh Current", callback=self._refresh_viewer, width=-1)
+            dpg.add_spacer(height=20)
+            dpg.add_separator()
 
-        dpg.add_spacer(height=10)
-        dpg.add_button(label="Load Selected Date", callback=self._load_from_date_picker, width=-1)
-        dpg.add_spacer(height=10)
-        dpg.add_button(label="🔄 Refresh Current", callback=self._refresh_viewer, width=-1)
-        dpg.add_spacer(height=20)
-        dpg.add_separator()
 
-        dpg.add_group(tag="file_tree_container")
-        self.file_tree = FileTreeWidget("file_tree_container", self.file_manager)
+        # Use tag="file_tree_group" to match the toggle logic
+        dpg.add_group(tag="file_tree_group", show=False) 
+        self.file_tree = FileTreeWidget("file_tree_group", self.file_manager)
         self.file_tree.on_file_selected = self._on_file_selected
         self.file_tree.on_file_deleted = self._on_file_deleted
         self.file_tree.populate()
         dpg.add_separator()
+
+    def _toggle_calendar_view(self, sender, app_data):
+        """toggle between calendar and file tree views"""
+        self.showing_calendar = not self.showing_calendar
+
+        if self.showing_calendar:
+            # show calendar, hide file tree
+            dpg.configure_item("calendar_group", show=True)
+            dpg.configure_item("file_tree_group", show=False)
+            dpg.set_value(self.ui_ids['log_files_header'], "Log Files ▼")
+        else:
+            # show file tree, hide calendar
+            dpg.configure_item("calendar_group", show=False)
+            dpg.configure_item("file_tree_group", show=True)
+            dpg.set_value(self.ui_ids['log_files_header'], "Log Files ▲")
 
     def _build_right_panel(self):
         """Build right panel: status, log viewer"""
@@ -231,8 +256,8 @@ class KeyloggerViewerApp:
         elif self.current_viewing_file:
             self._refresh_log_viewer(self.current_viewing_file)
 
-    def _on_search_changed(self, sender, app_data, user_data):
-        self.file_tree.populate(dpg.get_value(sender))
+    #def _on_search_changed(self, sender, app_data, user_data):
+     #   self.file_tree.populate(dpg.get_value(sender))
 
     def _on_file_selected(self, filepath):
         self.current_viewing_file = filepath
@@ -283,7 +308,7 @@ class KeyloggerViewerApp:
                 dpg.set_value(self.ui_ids['executable_label'], self.current_executable)
             except:
                 dpg.set_value(self.ui_ids['executable_label'], "Unknown")
-            self.file_tree.populate(dpg.get_value(self.ui_ids['search_input']) if 'search_input' in self.ui_ids else "")
+
         else:
             dpg.set_value(self.ui_ids['executable_label'], "Not running")
 
