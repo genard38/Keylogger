@@ -114,8 +114,7 @@ class KeyloggerViewerApp:
         dpg.add_text("Log Files", color=(200, 200, 255))
         dpg.add_separator()
 
-        self.ui_ids['search_input'] = dpg.add_input_text(label="🔍 Search", callback=self._on_search_changed, width=-1)
-        dpg.add_spacer(height=10)
+        # Removed search input
 
         dpg.add_text("Selected Date", color=(200, 200, 255))
         dpg.add_separator()

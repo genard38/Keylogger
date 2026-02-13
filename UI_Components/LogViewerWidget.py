@@ -33,14 +33,17 @@ class LogViewerWidget:
             dpg.add_spacer(height=5)
 
             self.ui_ids['log_container'] = dpg.generate_uuid()
-            with dpg.child_window(height=-40, tag=self.ui_ids['log_container']):
+            # Enable horizontal scrollbar on the container
+            with dpg.child_window(height=-40, tag=self.ui_ids['log_container'], horizontal_scrollbar=True):
                 self.ui_ids['log_text'] = dpg.add_input_text(
                     multiline=True,
                     readonly=True,
-                    width=-1,
+                    width=2000, # Large width to enable horizontal scrolling
                     height=-1,  # Fill parent container
                     tab_input=True
                 )
+                # Add a spacer at the bottom to ensure the last line is fully visible when scrolling to bottom
+                dpg.add_spacer(height=20)
 
             dpg.add_spacer(height=5)
             self.ui_ids['info_label'] = dpg.add_text("Select a file to view logs", color=(150, 150, 255))
@@ -82,12 +85,13 @@ class LogViewerWidget:
 
     def set_auto_scroll(self, enabled: bool):
         """Enables or disables auto-scrolling to the bottom."""
+        # Disable tracking on the text widget itself to prevent horizontal jumping
+        dpg.configure_item(self.ui_ids['log_text'], tracked=False)
+        
         if enabled:
-            # This toggle sequence is more robust for forcing a state update.
-            dpg.configure_item(self.ui_ids['log_text'], tracked=False)
-            dpg.configure_item(self.ui_ids['log_text'], tracked=True, track_offset=1.0)
-        else:
-            dpg.configure_item(self.ui_ids['log_text'], tracked=False)
+            # Scroll the container (child window) to the bottom vertically
+            # We use a large number to ensure we hit the bottom
+            dpg.set_y_scroll(self.ui_ids['log_container'], 999999.0)
 
     def update_storage(self, formatted_size: str, color: tuple):
         """Update the storage indicator display."""
