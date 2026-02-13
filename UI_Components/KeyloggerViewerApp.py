@@ -109,7 +109,7 @@ class KeyloggerViewerApp:
             dpg.add_text("Stop recording keystrokes")
 
         dpg.add_spacer(height=5)
-        self.ui_ids['logging_status'] = dpg.add_text("● Stopped", color=(255, 0, 0))
+        # Removed redundant logging_status text
 
         dpg.add_text("Log Files", color=(200, 200, 255))
         dpg.add_separator()
@@ -167,8 +167,7 @@ class KeyloggerViewerApp:
         """Start the keylogger"""
         dpg.configure_item(self.ui_ids['start_btn'], enabled=False)
         dpg.configure_item(self.ui_ids['stop_btn'], enabled=True)
-        dpg.set_value(self.ui_ids['logging_status'], "● Logging")
-        dpg.configure_item(self.ui_ids['logging_status'], color=(0, 255, 0))
+        # Removed logging_status update
         dpg.set_value(self.ui_ids['status_label'], "Logging")
         dpg.configure_item(self.ui_ids['status_label'], color=(0, 255, 0))
 
@@ -192,8 +191,7 @@ class KeyloggerViewerApp:
         self.keylogger.stop()
         dpg.configure_item(self.ui_ids['start_btn'], enabled=True)
         dpg.configure_item(self.ui_ids['stop_btn'], enabled=False)
-        dpg.set_value(self.ui_ids['logging_status'], "● Stopped")
-        dpg.configure_item(self.ui_ids['logging_status'], color=(255, 0, 0))
+        # Removed logging_status update
         dpg.set_value(self.ui_ids['status_label'], "Stopped")
         dpg.configure_item(self.ui_ids['status_label'], color=(255, 0, 0))
 
