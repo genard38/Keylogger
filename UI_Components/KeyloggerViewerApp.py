@@ -143,7 +143,6 @@ class KeyloggerViewerApp:
             dpg.add_spacer(height=10)
             dpg.add_button(label="🔄 Refresh Current", callback=self._refresh_viewer, width=-1)
             dpg.add_spacer(height=20)
-            dpg.add_separator()
 
 
         # Use tag="file_tree_group" to match the toggle logic
