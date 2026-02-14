@@ -87,7 +87,7 @@ class KeyloggerViewerApp:
                     dpg.add_menu_item(label="About", callback=lambda: self.show_about())
 
             with dpg.table(header_row=False, borders_innerV=True, tag="main_table"):
-                dpg.add_table_column(width_fixed=True, init_width_or_weight=255)
+                dpg.add_table_column(width_fixed=True, init_width_or_weight=320)
                 dpg.add_table_column()
 
                 with dpg.table_row():
