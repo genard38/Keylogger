@@ -1,0 +1,28 @@
+
+[--- Logging Started: 2026-03-09 08:59:05 ---]
+
+
+[--- msedge.exe - New tab and 3 more pages - Personal - Microsoft​ Edge --- 2026-03-09 08:59:24 ---]
+monkeoyktye.a<backspace>m<ctrl_l><backspace>monkeytype.com<enter>
+
+[--- msedge.exe - Monkeytype | A minimalistic, customizable typing test and 3 more pages - Personal - Microsoft​ Edge --- 2026-03-09 08:59:52 ---]
+<shift>I<space>like<space>what's<space>beset<space>fo<backspace><backspace><backspace><backspace><backspace>t<space>for<space>me,<space>but<space><shift>if<space><shift>I<space>can't<space>have<space>that...<space>then<space>no<space>one<space>can<shift_r>!
+
+[--- python.exe - Keylogger with Viewer --- 2026-03-09 09:06:06 ---]
+<cmd>
+
+[--- SearchHost.exe - Search --- 2026-03-09 09:06:07 ---]
+telegram<enter>
+
+[--- Telegram.exe - Telegram (29) --- 2026-03-09 09:06:12 ---]
+0429<enter>
+
+[--- msedge.exe - Monkeytype | A minimalistic, customizable typing test and 3 more pages - Personal - Microsoft​ Edge --- 2026-03-09 09:09:06 ---]
+<shift_r>Sometimes<space><shift>I<space>feel<space>like<space><shift>I've<space>already<space>seen<space>everythign<space>th<backspace><backspace><backspace><backspace><backspace>ng<space>that's<space>gonna<space>happen<space>and<space>it's<space>a<space>nightmare.
+
+[--- msedge.exe - New tab and 4 more pages - Personal - Microsoft​ Edge --- 2026-03-09 09:09:22 ---]
+gui<backspace><backspace><backspace><backspace><backspace>python<space>gui<space>libraries<space>list\<enter>
+
+[--- msedge.exe - python gui libraries list\ - Search and 4 more pages - Personal - Microsoft​ Edge --- 2026-03-09 09:09:57 ---]
+whyc<backspace><backspace><backspace><backspace><backspace>which<space>is<space>the<space>fastest<space>pthon<backspace><backspace><backspace><backspace><backspace>ptho<backspace><backspace><backspace>ython<space>libraries<space><shift>Py<shift_r>Qt<space>or<space><shift_r>Dear<shift>Pyg<backspace><shift_r>Gui<shift>?<enter>
+[--- Logging Stopped: 2026-03-09 09:11:40 ---]
