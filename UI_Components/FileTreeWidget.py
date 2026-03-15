@@ -1,135 +1,256 @@
-#FileTreeWidget_dpg.py
-from fileinput import filename
-
-import dearpygui.dearpygui as dpg
 import os
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem,
+    QMenu, QMessageBox, QDialog, QDialogButtonBox,
+    QLabel, QVBoxLayout as QVBox
+)
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QIcon
 
-class FileTreeWidget:
-    """File tree widget - Dear PyGui version"""
 
-    MONTH_ORDER = ["January", "February", "March", "April", "May", "June",
-                   "July", "August", "September", "October", "November", "December"]
+class FileTreeWidget(QWidget):
+    """
+    PyQt6 equivalent of the DearPyGui FileTreeWidget.
 
-    # Windows 11 style icons
+    DPG approach:
+        - Built tree by creating dpg.tree_node() items manually
+        - Right-click via item_handler_registry
+        - Callbacks via user_data on each selectable
+
+    PyQt6 approach:
+        - QTreeWidget manages the whole tree
+        - Right-click via customContextMenuRequested signal
+        - Data stored directly on QTreeWidgetItem via setData()
+
+    Key concept — Signals & Slots (replaces dpg callbacks):
+        DPG:    dpg.add_selectable(callback=my_func, user_data=filepath)
+        PyQt6:  widget.signal.connect(my_slot)
+                where signal = event source, slot = handler function
+
+    Custom signals (defined at class level, not in __init__):
+        These replace your on_file_selected / on_file_deleted callback attributes.
+        Any code can connect to them: self.file_tree.file_selected.connect(my_func)
+    """
+
+    # Class-level signal declarations — equivalent to your callback attributes:
+    #   self.on_file_selected = None  →  file_selected = pyqtSignal(str)
+    #   self.on_file_deleted  = None  →  file_deleted  = pyqtSignal(str)
+    # The (str) means the signal carries one string argument (the filepath)
+    file_selected = pyqtSignal(str)
+    file_deleted = pyqtSignal(str)
+
+    MONTH_ORDER = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ]
+
     ICON_FOLDER = "📁"
-    ICON_FILE = "📄"
+    ICON_FILE   = "📄"
 
-
-    def __init__(self, parent_id, file_manager):
-        self.parent_id = parent_id
+    def __init__(self, parent=None, file_manager=None):
+        super().__init__(parent)
         self.file_manager = file_manager
-        self.file_tree_items = {} # ID -> filepath mapping
-        self.on_file_selected = None # Callback
-        self.on_file_deleted = None # Callback
+        self._last_hash = None
+        self._last_filter = ""
+        self._build_ui()
 
+    # ------------------------------------------------------------------
+    # UI Construction
+    # ------------------------------------------------------------------
 
-        self._create_widget()
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
-    def _create_widget(self, tree_window=None):
-        """Create the tree widget inside a child window"""
-        # Child window provides scrolling
-        with dpg.child_window(
-            height=300,
-            parent=self.parent_id,
-            tag="file_tree_window"
-        ):
-            # Tree will be populated here
-            dpg.add_text("File tree loading...", tag="tree_placeholder")
+        # QTreeWidget = the whole tree component
+        # In dpg you manually built tree_node() items inside a child_window.
+        # Here QTreeWidget manages expand/collapse, selection, scrolling itself.
+        self.tree = QTreeWidget()
+        self.tree.setHeaderHidden(True)       # No column header — same as dpg
+        self.tree.setAnimated(True)           # Smooth expand/collapse
 
-        with dpg.tooltip("file_tree_window"):
-            dpg.add_text("Double-click: Open file")
-            dpg.add_text("Right-click: Options menu")
-            dpg.add_text("Expand folders to see log files", color=(150, 150, 150))
+        # Right-click menu setup:
+        # CustomContextMenu = "I'll handle right-clicks myself"
+        # When right-clicked, Qt fires the customContextMenuRequested signal
+        # We connect that signal to our handler method
+        self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self._on_right_click)
 
-        # Create shared right-click handler registry
-        with dpg.item_handler_registry(tag="file_item_handler"):
-            dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right, callback=self._handle_right_click)
+        # Single-click to select/open file
+        # itemClicked signal fires when user clicks any item
+        self.tree.itemClicked.connect(self._on_item_clicked)
+
+        layout.addWidget(self.tree)
+
+        # Tooltip on the tree container
+        self.tree.setToolTip(
+            "Click: Open file\n"
+            "Right-click: Options menu\n"
+            "Expand folders to see log files"
+        )
+
+    # ------------------------------------------------------------------
+    # Tree Population
+    # ------------------------------------------------------------------
 
     def populate(self, filter_text=""):
-        """Populate the tree with files"""
-        # Get new data
+        """
+        Populate the tree with log files.
+
+        DPG version deleted all children then rebuilt from scratch using
+        dpg.delete_item() on each child.
+
+        PyQt6 version uses tree.clear() — one call wipes everything,
+        then we rebuild with QTreeWidgetItem objects.
+        """
         organized = self.file_manager.organize_files()
 
-        # Check if changed (simple hash comparison)
+        # Skip rebuild if nothing changed (same optimization as dpg version)
         new_hash = hash(str(organized))
-        if hasattr(self, '_last_hash') and self._last_hash == new_hash and filter_text == self._last_filter:
-            return #No changes , skip rebuild
-
+        if self._last_hash == new_hash and filter_text == self._last_filter:
+            return
         self._last_hash = new_hash
         self._last_filter = filter_text
 
-        # Delete existing tree content
-        if dpg.does_item_exist("tree_placeholder"):
-            dpg.delete_item("tree_placeholder")
+        # Wipe existing tree — equivalent to deleting all dpg children
+        self.tree.clear()
 
-        # Delete all existing tree nodes
-        children = dpg.get_item_children("file_tree_window", slot=1)
-        if children:
-            for child in children:
-                dpg.delete_item(child)
+        for month in self.MONTH_ORDER:
+            if month not in organized:
+                continue
+            if filter_text and not self._matches_filter(month, organized[month], filter_text):
+                continue
 
-        # Add temporary loading text (Add this AFTER clearing children)
-        if not dpg.does_item_exist("tree_loading_indicator"):
-            dpg.add_text("Loading files...", tag="tree_loading_indicator", parent="file_tree_window",
-                         color=(255, 255, 0))
+            # ── Month node (top level) ──────────────────────────────────
+            # QTreeWidgetItem(self.tree) = add to root = dpg.tree_node() at top level
+            month_item = QTreeWidgetItem(self.tree)
+            month_item.setText(0, f"{self.ICON_FOLDER} {month}")
 
-        # Clear mapping
-        self.file_tree_items.clear()
+            # Sort days numerically (same logic as dpg version)
+            days = sorted(organized[month].keys(), key=lambda x: int(x))
 
-        # Get organized files
-        organized = self.file_manager.organize_files()
+            for day in days:
+                # ── Day node (second level) ─────────────────────────────
+                # QTreeWidgetItem(month_item) = child of month = nested dpg.tree_node()
+                day_item = QTreeWidgetItem(month_item)
+                day_item.setText(0, f"{self.ICON_FILE} keylog_day_{day}.txt")
 
-        # Build tree
-        with dpg.group(parent="file_tree_window"):
-            for month in self.MONTH_ORDER:
-                if month not in organized:
-                    continue
+                years_files = sorted(organized[month][day], key=lambda x: x[0], reverse=True)
 
-                # Filter logic
-                if filter_text and not self._matches_filter(month, organized[month], filter_text):
-                    continue
+                for year, filepath in years_files:
+                    display_text = f"{month} {day} {year}"
+                    if filter_text and filter_text.lower() not in display_text.lower():
+                        continue
 
-                # Create month node
-                with dpg.tree_node(label=f"{self.ICON_FOLDER} {month}", default_open=False):
+                    # ── File leaf node (third level) ────────────────────
+                    # This replaces dpg.add_selectable() + user_data=filepath
+                    file_item = QTreeWidgetItem(day_item)
+                    file_item.setText(0, f"{self.ICON_FILE} {year}")
 
-                    # Sort day
-                    days = sorted(organized[month].keys(), key=lambda x: int(x))
+                    # Store filepath directly ON the item using Qt's data system
+                    # setData(column, role, value)
+                    # Qt.ItemDataRole.UserRole = custom slot for your own data
+                    # This replaces: self.file_tree_items[file_id] = filepath
+                    file_item.setData(0, Qt.ItemDataRole.UserRole, filepath)
 
-                    for day in days:
-                        # Create day node
-                        with dpg.tree_node(label=f"{self.ICON_FILE} keylog_day_{day}.txt", default_open=False):
+    # ------------------------------------------------------------------
+    # Event Handlers (Slots)
+    # ------------------------------------------------------------------
 
-                            # Sort years
-                            years_files = sorted(organized[month][day], key=lambda x: x[0], reverse=True)
+    def _on_item_clicked(self, item: QTreeWidgetItem, column: int):
+        """
+        Handle single click on tree item.
 
-                            for year, filepath in years_files:
-                                # Filter individual files
-                                display_text = f"{month} {day} {year}"
-                                if filter_text and filter_text.lower() not in display_text.lower():
-                                    continue
+        Replaces: dpg.add_selectable(callback=self._on_file_click, user_data=filepath)
 
-                                # Create selectable file item
-                                file_id = dpg.add_selectable(
-                                    label=f"{self.ICON_FILE} {year}",
-                                    callback=self._on_file_click,
-                                    user_data=filepath
-                                )
+        We retrieve the filepath using getData() — the reverse of setData().
+        Non-file items (month/day nodes) have no UserRole data, so getData returns None.
+        """
+        filepath = item.data(0, Qt.ItemDataRole.UserRole)
+        if filepath:
+            # Emit signal — equivalent to: if self.on_file_selected: self.on_file_selected(filepath)
+            # Anyone connected to this signal will be called automatically
+            self.file_selected.emit(filepath)
 
-                                # Bind right-click handler
-                                dpg.bind_item_handler_registry(file_id, "file_item_handler")
+    def _on_right_click(self, position):
+        """
+        Handle right-click — show context menu.
 
-                                # Store mapping
-                                self.file_tree_items[file_id] = filepath
+        DPG used item_handler_registry + dpg.window(modal=True).
+        PyQt6 uses QMenu — a native context menu that auto-dismisses.
 
-        # Right before the method ends, add:
-        if dpg.does_item_exist("tree_loading_indicator"):
-            dpg.delete_item("tree_loading_indicator")
-        # ===================================================================
+        position = coordinates within the tree widget (local coords)
+        We convert to screen coords for menu placement.
+        """
+        # Get which item was right-clicked
+        item = self.tree.itemAt(position)
+        if not item:
+            return
 
+        filepath = item.data(0, Qt.ItemDataRole.UserRole)
+        if not filepath:
+            return  # Clicked a folder node, not a file
 
+        # Build context menu — replaces dpg.window(modal=True) with buttons
+        menu = QMenu(self)
+        action_open   = menu.addAction("Open")
+        action_delete = menu.addAction("Delete")
+
+        # exec() shows the menu and BLOCKS until user clicks or dismisses
+        # mapToGlobal converts local widget coords → screen coords
+        chosen = menu.exec(self.tree.mapToGlobal(position))
+
+        if chosen == action_open:
+            self.file_selected.emit(filepath)
+        elif chosen == action_delete:
+            self._confirm_delete(filepath)
+
+    # ------------------------------------------------------------------
+    # Delete Flow
+    # ------------------------------------------------------------------
+
+    def _confirm_delete(self, filepath):
+        """
+        Show confirmation dialog before deleting.
+
+        DPG: dpg.window(modal=True) with manual buttons
+        PyQt6: QMessageBox — a built-in standard dialog
+
+        QMessageBox.StandardButton.Yes / No = the button choices
+        """
+        filename = os.path.basename(filepath)
+
+        # QMessageBox is simpler than building a dpg modal window manually
+        reply = QMessageBox.question(
+            self,
+            "Confirm Delete",
+            f"Delete {filename}?\n\nThis cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No  # Default highlighted button
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self._do_delete(filepath)
+
+    def _do_delete(self, filepath):
+        """Execute the file deletion."""
+        try:
+            self.file_manager.delete_file(filepath)
+            self.populate(self._last_filter)  # Refresh tree
+            self.file_deleted.emit(filepath)   # Notify parent app
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to delete file:\n{str(e)}"
+            )
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
 
     def _matches_filter(self, month, days_dict, filter_text):
-        """Check if month/days match filter"""
+        """Check if month/days match the search filter — unchanged logic."""
         if not filter_text:
             return True
         if filter_text.lower() in month.lower():
@@ -139,107 +260,3 @@ class FileTreeWidget:
                 if filter_text.lower() in f"{month} {day} {year}".lower():
                     return True
         return False
-
-
-    def _on_file_click(self, sender, app_data, user_data):
-        """Handle file selection"""
-        filepath = user_data # We passed filepath as user_data
-        if self.on_file_selected:
-            self.on_file_selected(filepath)
-
-    def _handle_right_click(self, sender, app_data):
-        """Handle right click on file item"""
-        # app_data is (clicked_item_id, button_index)
-        clicked_item = app_data[1]
-        self._show_context_menu(clicked_item, None)
-
-    def _show_context_menu(self, sender, app_data):
-        """Show right-click context menu"""
-
-        # Get clicked item
-        if sender not in self.file_tree_items:
-            return
-
-        filepath = self.file_tree_items[sender]
-
-        # Create popup window
-        if dpg.does_item_exist("file_context_menu"):
-            dpg.delete_item("file_context_menu")
-
-        with dpg.window(
-            label="File Options",
-            modal=True,
-            show=True,
-            tag="file_context_menu",
-            pos=dpg.get_mouse_pos(local=False),
-            no_title_bar=True,
-            autosize=True
-        ):
-            dpg.add_button(
-                label="Open",
-                callback=lambda: self._context_open(filepath),
-                width=150
-            )
-            dpg.add_button(
-                label="Delete",
-                callback=lambda: self._context_delete(filepath),
-                width=150
-            )
-            dpg.add_button(
-                label="Cancel",
-                callback=lambda: dpg.delete_item("file_context_menu"),
-                width=150
-            )
-
-    def _context_open(self, filepath):
-        """Open file from context menu"""
-        dpg.delete_item("file_context_menu")
-        if self.on_file_selected:
-            self.on_file_selected(filepath)
-
-    def _context_delete(self, filepath):
-        """Delete file from context menu"""
-        dpg.delete_item("file_context_menu")
-
-        # Confirm dialog
-        if dpg.does_item_exist("confirm_delete"):
-            dpg.delete_item("confirm_delete")
-
-        with dpg.window(
-            label="Confirm Delete",
-            modal=True,
-            show=True,
-            tag="confirm_delete",
-            autosize=True,
-            pos=(400, 300)
-        ):
-            dpg.add_text(f"Delete {os.path.basename(filepath)}?")
-            dpg.add_text("This cannot be undone.", color=(225, 100, 100))
-            dpg.add_spacer(height=10)
-
-            with dpg.group(horizontal=True):
-                dpg.add_button(
-                    label="Yes, Delete",
-                    callback=lambda: self._do_delete(filepath),
-                    width=100
-                )
-                dpg.add_button(
-                    label="Cancel",
-                    callback=lambda: dpg.delete_item("confirm_delete"),
-                    width=100
-                )
-
-    def _do_delete(self, filepath):
-        """Actually delete the file"""
-        dpg.delete_item("confirm_delete")
-
-        try:
-            self.file_manager.delete_file(filepath)
-            self.populate() # Refresh tree
-            if self.on_file_deleted:
-                self.on_file_deleted(filepath)
-        except Exception as e:
-            # Error dialog
-            with dpg.window(label="Error", modal=True, show=True, autosize=True):
-                dpg.add_text(f"Failed to delete: {str(e)}", color=(255, 0, 0))
-                dpg.add_button(label="OK", callback=lambda s, a: dpg.delete_item(dpg.get_item_parent(s)))
