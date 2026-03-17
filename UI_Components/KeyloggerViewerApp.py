@@ -136,7 +136,7 @@ class KeyloggerViewerApp(QMainWindow):
         # QSplitter = dpg.table with 2 columns
         # User can drag the divider to resize panels
         splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setHandleWidth(2)
+        splitter.setHandleWidth(0) # Set to 0 to hide the handle
 
         # Build panels
         left_panel = self._build_left_panel()
@@ -147,7 +147,7 @@ class KeyloggerViewerApp(QMainWindow):
 
         # Set initial sizes: 255px left, rest to right
         # equivalent to dpg: init_width_or_weight=255 on left column
-        splitter.setSizes([255, 945])
+        splitter.setSizes([310, 890])
 
         main_layout.addWidget(splitter)
 
@@ -179,7 +179,7 @@ class KeyloggerViewerApp(QMainWindow):
         Returns a QWidget (the panel) to be added to the splitter.
         """
         panel = QWidget()
-        panel.setFixedWidth(255)
+        panel.setMinimumWidth(310)
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(0, 0, 8, 0)
         layout.setSpacing(6)
@@ -202,7 +202,7 @@ class KeyloggerViewerApp(QMainWindow):
 
         # ── Section label ────────────────────────────────────────────────
         layout.addWidget(self._section_label("Log Files"))
-        layout.addWidget(self._separator())
+        # layout.addWidget(self._separator()) # Removed separator
 
         # ── Search input ─────────────────────────────────────────────────
         # QLineEdit = dpg.add_input_text(label="🔍 Search")
@@ -216,14 +216,16 @@ class KeyloggerViewerApp(QMainWindow):
 
         # ── Calendar ─────────────────────────────────────────────────────
         layout.addWidget(self._section_label("Selected Date"))
-        layout.addWidget(self._separator())
+        # layout.addWidget(self._separator()) # Removed separator
 
         # QCalendarWidget = dpg.add_date_picker()
         self.calendar = QCalendarWidget()
+        self.calendar.setStyleSheet("""
+            QToolButton#qt_calendar_monthbutton::menu-indicator { image: none; }""")
         self.calendar.setSelectedDate(
             datetime.date.today()
         )
-        self.calendar.setMaximumHeight(200)
+        self.calendar.setMaximumHeight(220)
         layout.addWidget(self.calendar)
 
         btn_load_date = QPushButton("Load Selected Date")
@@ -235,7 +237,7 @@ class KeyloggerViewerApp(QMainWindow):
         layout.addWidget(btn_refresh)
 
         layout.addSpacing(16)
-        layout.addWidget(self._separator())
+        # layout.addWidget(self._separator()) # Removed separator
 
         # ── File tree ─────────────────────────────────────────────────────
         # FileTreeWidget is now a QWidget — just add it to layout
@@ -251,7 +253,7 @@ class KeyloggerViewerApp(QMainWindow):
 
         # stretch=1 so the tree fills remaining vertical space
         layout.addWidget(self.file_tree, stretch=1)
-        layout.addWidget(self._separator())
+        # layout.addWidget(self._separator()) # Removed separator
 
         return panel
 

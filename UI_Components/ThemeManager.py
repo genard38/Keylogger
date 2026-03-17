@@ -102,6 +102,7 @@ class ThemeManager:
                 QFrame, QGroupBox {{
                     background-color: {c['bg_medium']};
                     border: 1px solid {c['border']};
+                    border: none;
                     border-radius: 5px;
                 }}
 
