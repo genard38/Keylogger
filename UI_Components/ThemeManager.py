@@ -1,4 +1,4 @@
-import dearpygui.dearpygui as dpg
+
 from PyQt6.QtWidgets import QApplication
 
 

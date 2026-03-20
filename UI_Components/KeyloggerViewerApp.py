@@ -1,16 +1,20 @@
+import pystray
+from PIL import Image, ImageDraw
+
+
+
 import datetime
 import glob
 import os
-import queue
+
 import threading
-import time
 
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QSplitter, QPushButton, QLabel, QLineEdit,
-    QCheckBox, QCalendarWidget, QMenuBar, QMenu,
-    QDialog, QDialogButtonBox, QStatusBar, QFrame,
-    QSizePolicy
+    QCheckBox, QCalendarWidget,
+    QDialog, QDialogButtonBox, QStatusBar, QFrame, QApplication,
+
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject
 from PyQt6.QtGui import QAction, QColor
@@ -100,6 +104,7 @@ class KeyloggerViewerApp(QMainWindow):
 
         # ── Build UI ────────────────────────────────────────────────────
         self._build_ui()
+        self._create_tray_icon()
 
         # ── Periodic update timer (replaces manual while loop) ──────────
         # QTimer fires every N milliseconds on the main thread
@@ -107,6 +112,41 @@ class KeyloggerViewerApp(QMainWindow):
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self._update_status)
         self.update_timer.start(self.UPDATE_INTERVAL_MS)
+
+
+    def _create_tray_icon(self):
+        """Create system tray icon"""
+        # Draw a simple icon
+        img = Image.new('RGB', (64,64), color=(30, 30, 30))
+        draw = ImageDraw.Draw(img)
+        draw.rectangle([16, 16, 48, ], fill=(0, 120, 215))
+
+        menu = pystray.Menu(
+            pystray.MenuItem("Show", self._show_from_tray),
+            pystray.MenuItem("Quit", self._quit_app)
+        )
+
+        self.tray_con = pystray.Icon("Keylogger", img, "Keylogger with Viewer", menu)
+        threading.Thread(target=self.tray_icon.run, daemon=True). start()
+
+    def _show_from_tray(self):
+        self.show()
+        self.raise_()
+
+    def _quit_app(self):
+        if self.tray_icon:
+            self.tray_icon.stop()
+        self.keylogger.stop()
+        QApplication.quit()
+
+    def closeEvent(self, event):
+        """Minimize to tray instead of closing"""
+        event.ignore()
+        self.hide()
+
+
+
+
 
     # ===================================================================
     # UI Construction

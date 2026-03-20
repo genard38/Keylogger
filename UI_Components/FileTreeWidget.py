@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QLabel, QVBoxLayout as QVBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
+
 
 
 class FileTreeWidget(QWidget):

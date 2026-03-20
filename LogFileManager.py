@@ -12,9 +12,10 @@ class LogFileManager:
         self._file_lock = threading.Lock()
 
     def _ensure_directory_exists(self):
-        """Create log directory if it doesn't exist"""
+        """Ensure the logging system has a valid directory to write files into."""
         if not os.path.exists(self.log_directory):
             os.makedirs(self.log_directory)
+
 
     def get_log_filename(self, date=None):
         """Generate log filename for a specific date (or today)"""
@@ -52,14 +53,7 @@ class LogFileManager:
 
         return organized
 
-    # def get_file_tail(self, filepath, num_lines=50):
-    #     """Read las N lines of a file for better performance"""
-    #     try:
-    #         with open(filepath ,'r', encoding='utf-8') as f:
-    #             lines = f.readline()
-    #             return ''.join(lines[-num_lines:])
-    #     except Exception as e:
-    #         return ""
+
 
     def read_file(self, filepath):
         """Read content from a log file"""
@@ -84,7 +78,8 @@ class LogFileManager:
             except Exception as e:
                 print(f"Error writing to log file: {e}")
 
-    def delete_file(self, filepath):
+    @staticmethod
+    def delete_file(filepath):
         """Delete a log file"""
         try:
             os.remove(filepath)
