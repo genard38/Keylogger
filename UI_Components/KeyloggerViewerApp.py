@@ -2,7 +2,6 @@ import pystray
 from PIL import Image, ImageDraw
 
 
-
 import datetime
 import glob
 import os
@@ -13,7 +12,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QSplitter, QPushButton, QLabel, QLineEdit,
     QCheckBox, QCalendarWidget,
-    QDialog, QDialogButtonBox, QStatusBar, QFrame, QApplication,
+    QDialog, QDialogButtonBox, QStatusBar, QFrame, QApplication
 
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject
@@ -104,7 +103,6 @@ class KeyloggerViewerApp(QMainWindow):
 
         # ── Build UI ────────────────────────────────────────────────────
         self._build_ui()
-        self._create_tray_icon()
 
         # ── Periodic update timer (replaces manual while loop) ──────────
         # QTimer fires every N milliseconds on the main thread
@@ -119,7 +117,7 @@ class KeyloggerViewerApp(QMainWindow):
         # Draw a simple icon
         img = Image.new('RGB', (64,64), color=(30, 30, 30))
         draw = ImageDraw.Draw(img)
-        draw.rectangle([16, 16, 48, ], fill=(0, 120, 215))
+        draw.rectangle([16, 16, 48 ], fill=(0, 120, 215))
 
         menu = pystray.Menu(
             pystray.MenuItem("Show", self._show_from_tray),
