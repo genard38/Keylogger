@@ -1,91 +1,75 @@
 # Keylogger with Viewer
-**v2.1 — Storage Monitor Edition**
 
-A Python desktop application for keystroke recording and log file management.
-
----
-
-## Overview
-
-Keylogger with Viewer is a cross-platform desktop application that captures and stores keystrokes, then lets you browse and review log files through a clean, Windows 11-style GUI built with Dear PyGui. It records which application was active during typing and organizes logs by date for easy retrieval.
+A Python desktop application that records keystrokes to daily log files and provides a real-time viewer UI built with PyQt6.
 
 ---
 
 ## Features
 
-- Real-time keystroke capture using pynput
-- Active window tracking — shows which app was in focus
-- Date-organized file tree (Month > Day > Year)
-- Built-in log viewer with search and date picker
-- Storage indicator showing current file size (KB / MB)
-- Auto-scroll toggle for live monitoring
-- Right-click context menu: Open or Delete files
-- Windows 11-style dark theme
-- Cross-platform: Windows, macOS, Linux
+- **Start / Stop logging** — toggle keystroke capture at any time
+- **Active window tracking** — each log entry is grouped by the application in focus
+- **Daily log files** — logs are saved as `keylogs/keylog_YYYY-MM-DD.txt`
+- **Real-time viewer** — the UI refreshes automatically while logging is active
+- **File tree** — browse all saved logs organized by Month → Day → Year
+- **Calendar picker** — jump to any date's log file directly
+- **Search / filter** — filter the file tree by date string
+- **File management** — delete log files from the right-click context menu
+- **Storage indicator** — shows file size of the currently viewed log
+- **Auto-scroll** — checkbox to follow live output as keys are logged
+- **Cross-platform** — Windows, macOS, and Linux supported
 
 ---
 
 ## Project Structure
 
-| File | Description |
-|------|-------------|
-| `main.py` | Entry point — initializes DearPyGui and runs the app loop |
-| `KeyloggerEngine.py` | Captures keystrokes via pynput; runs in background thread |
-| `LogFileManager.py` | Handles file I/O: read, write, delete, organize log files |
-| `PlatformUtils.py` | Platform detection for active window tracking (Win/Mac/Linux) |
-| `UI_Components/KeyloggerViewerApp.py` | Main UI controller — builds layout, handles events |
-| `UI_Components/FileTreeWidget.py` | Scrollable file tree with right-click menu |
-| `UI_Components/LogViewerWidget.py` | Right panel log viewer with storage indicator |
-| `UI_Components/ThemeManager.py` | Applies global dark theme to all DearPyGui components |
+```
+Keylogger with Viewer/
+│
+├── main.py                          # Entry point — creates QApplication and launches window
+│
+├── KeyloggerEngine.py               # Keystroke capture logic (pynput listener)
+├── LogFileManager.py                # File I/O: create, read, write, delete log files
+├── PlatformUtils.py                 # OS-specific active window detection
+│
+├── UI_Components/
+│   ├── KeyloggerViewerApp.py        # Main window — layout, signals, periodic updates
+│   ├── FileTreeWidget.py            # Left panel tree: browse log files
+│   ├── LogViewerWidget.py           # Right panel: display log content
+│   └── ThemeManager.py             # Dark theme stylesheet (QSS)
+│
+├── backup_tkinter/                  # Old Tkinter version (kept for reference)
+│
+├── keylogs/                         # Auto-created — stores all log files
+│   └── keylog_YYYY-MM-DD.txt
+│
+└── requirements.txt
+```
 
 ---
 
 ## Requirements
 
-**Python 3.7 or higher**
+- Python 3.7+
+- Windows: `pywin32`, `psutil` (for active window detection)
+- macOS: `pyobjc-framework-Cocoa`
+- Linux: `xdotool` (system package)
 
-| Package | Purpose | Install |
-|---------|---------|---------|
-| `dearpygui` | GPU-accelerated GUI framework | `pip install dearpygui` |
-| `pynput` | Keyboard event capture | `pip install pynput` |
-| `pywin32` | Active window detection (Windows only) | `pip install pywin32` |
-| `psutil` | Process info for window tracking (Windows) | `pip install psutil` |
-| `pyobjc-framework-Cocoa` | Active window detection (macOS only) | `pip install pyobjc-framework-Cocoa` |
-| `xdotool` | Active window detection (Linux only) | `sudo apt install xdotool` |
+Install Python dependencies:
+
+```bash
+pip install -r requirements.txt
+pip install PyQt6 pynput
+```
+
+> On Windows, also run:
+> ```bash
+> pip install pywin32 psutil
+> ```
 
 ---
 
-## Installation
+## Running the App
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/your-username/keylogger-viewer.git
-cd keylogger-viewer
-```
-
-### 2. Install Python dependencies
-```bash
-pip install dearpygui pynput
-```
-
-### 3. Install platform-specific packages
-
-**Windows**
-```bash
-pip install pywin32 psutil
-```
-
-**macOS**
-```bash
-pip install pyobjc-framework-Cocoa
-```
-
-**Linux**
-```bash
-sudo apt install xdotool
-```
-
-### 4. Run the application
 ```bash
 python main.py
 ```
@@ -94,96 +78,50 @@ python main.py
 
 ## How It Works
 
-### Architecture
+### Keystroke Capture (`KeyloggerEngine`)
+- Uses `pynput.keyboard.Listener` running in a background thread
+- On each keypress, checks if the active window changed — if so, writes a section header
+- Appends each key as a character or `<special_key>` tag to the daily log file
+- Notifies the UI via a thread-safe signal queue
 
-The application uses a producer-consumer threading pattern:
+### Log Files (`LogFileManager`)
+- One `.txt` file per day: `keylogs/keylog_2026-01-08.txt`
+- All writes are protected by a `threading.Lock` to prevent race conditions
+- `organize_files()` parses filenames and returns a `{ month: { day: [(year, path)] } }` structure
 
-- `KeyloggerEngine` runs in a background daemon thread and writes keystrokes to disk.
-- It pushes the log file path onto a thread-safe `Queue` whenever a key is pressed.
-- The main UI loop (`KeyloggerViewerApp._update_loop`) polls that queue every frame and refreshes the viewer only when new data arrives for the currently viewed file.
-- This keeps the GUI responsive — the UI thread never blocks on I/O.
+### UI (`KeyloggerViewerApp`)
+- Built with **PyQt6** — replaces an earlier DearPyGui and Tkinter version
+- `QSplitter` divides the window into a left panel (controls + file tree) and right panel (log viewer)
+- A `QTimer` fires every 2 seconds to refresh the active window label and file tree
+- Thread-safe UI updates use a custom `_SignalQueue` adapter that wraps a `pyqtSignal`
 
-### Log File Format
+### Active Window Detection (`PlatformUtils`)
+| OS      | Method                                      |
+|---------|---------------------------------------------|
+| Windows | `win32gui` + `psutil`                       |
+| macOS   | `NSWorkspace` via `pyobjc`                  |
+| Linux   | `xdotool getactivewindow` subprocess call   |
 
-Logs are stored in a `keylogs/` directory as plain text files named by date:
+---
+
+## Log File Format
+
+Newer logs (Feb 2026+) use a compact inline format:
 
 ```
-keylogs/keylog_YYYY-MM-DD.txt
+[--- Logging Started: 2026-03-09 08:59:05 ---]
+
+[--- msedge.exe - New tab --- 2026-03-09 08:59:24 ---]
+monkeytype.com<enter>
+
+[--- claude.exe - Claude --- 2026-03-09 09:06:06 ---]
+generate<space>a<space>commit<space>message<enter>
 ```
 
-Inside each file, entries are grouped by active window:
-
-```
-[--- Chrome.exe - GitHub --- 2025-03-06 14:22:01 ---]
-Hello world<enter>
-```
+Older logs (Jan 2026) use a verbose per-key format where each keystroke is on its own timestamped line.
 
 ---
 
-## Usage
+## Privacy Notice
 
-| Action | How |
-|--------|-----|
-| Start logging | Click the green **Start Logging** button |
-| Stop logging | Click the red **Stop Logging** button |
-| View a log file | Click any file in the File Tree (left panel) |
-| Load by date | Use the date picker, then click **Load Selected Date** |
-| Search files | Type in the Search box to filter the file tree |
-| Delete a file | Right-click a file in the tree > Delete |
-| Refresh current view | Click **Refresh Current** or press `F5` |
-| Toggle auto-scroll | Check/uncheck **Auto-scroll** (useful for live monitoring) |
-
----
-
-## Storage & File Management
-
-- Logs are written to `keylogs/` in the application directory.
-- Each day gets one file. Starting the logger mid-day appends to the existing file.
-- The storage indicator (top of the viewer) shows the size of the currently viewed file.
-- Color coding: 🔵 blue = normal (<100 KB), 🟠 orange = moderate (<512 KB), 🔴 red = large (512 KB+).
-- Files can be deleted from within the app via right-click > Delete.
-
----
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `F5` | Refresh the current log viewer |
-
----
-
-## Platform Notes
-
-### Windows
-- Full feature support including active window name + executable.
-- Requires `pywin32` and `psutil` for window tracking.
-
-### macOS
-- Active window tracking shows application name only (no window title).
-- Requires `pyobjc-framework-Cocoa`.
-- You may need to grant Accessibility permissions in **System Preferences > Privacy & Security**.
-
-### Linux
-- Requires `xdotool` for active window detection.
-- May require running under an X11 session (not Wayland) for xdotool to work.
-
----
-
-## Known Limitations
-
-- The file tree rebuilds on every change — may be slow with hundreds of log files.
-- Log viewer loads the entire file into memory; very large files (>10 MB) may be slow.
-- On Linux under Wayland, active window detection will return `"Unknown"`.
-
----
-
-## Disclaimer
-
-> This software is intended for personal use on your own devices only. Recording keystrokes on a device without the owner's explicit consent may be illegal in your jurisdiction. The author assumes no responsibility for misuse.
-
----
-
-## License
-
-MIT License — free for personal and educational use.
+This tool logs **all keystrokes** including passwords and personal messages. It is intended for personal productivity tracking or parental monitoring on your own devices only. Do not use it on any device without the explicit consent of the user being monitored.
